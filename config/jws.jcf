@@ -1,7 +1,15 @@
 JWS: {
+    Paths: {
+        Base: /usr/bin/jws
+        Data: /usr/local/etc/jws
+        Internals: $Data$/int
+    }
     Boot: {
         Commands: []
         Port: 1300
     }
-    Services: []
+    Services: {
+        Internals: {}
+        Externals: []
+    }
 }
