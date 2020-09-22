@@ -13,32 +13,36 @@ namespace Jay.Config
         private Dictionary<string, List<Jcf>> _lists;
         public Jcf Parent { get; private set; }
 
-        public string this[string key] => GetKey(key);
-
-        private string GetKey(string key)
+        public object this[string key]
         {
-            int split = key.IndexOf(".");
-            if(split == -1)
+            get => GetKey(key);
+            set => SetKey(key, value);
+        }
+
+        private object GetKey(string key)
+        {
+            var res = Route(key);
+            if(res.Item4 == JcfType.Value) return res.Item1.Lookup(res.Item3);
+            return res.Item2[res.Item3];
+        }
+
+        private void SetKey(string key, object val)
+        {
+            var res = Route(key);
+            switch(res.Item4)
             {
-                if(_values.ContainsKey(key)) { return Translate(_values[key]); }
-                throw new ArgumentException("Invalid key: " + key);
-            }
-            else
-            {
-                string pre = key.Substring(0, split);
-                string post = key.Substring(split + 1);
-                if(_subs.ContainsKey(pre))
-                {
-                    try
-                    {
-                        return _subs[pre][post];
-                    }
-                    catch(ArgumentException e)
-                    {
-                        throw new ArgumentException(e.Message + " in " + pre, e);
-                    }
-                }
-                throw new ArgumentException("Invalid partial key: " + pre);
+                case JcfType.Value:
+                    if(val is string str) res.Item2[res.Item3] = str;
+                    else throw new ArgumentException("Expecting a string, not " + val.GetType() + ".", "val");
+                    break;
+                case JcfType.Jcf:
+                    if(val is Jcf jcf) res.Item2[res.Item3] = jcf;
+                    else throw new ArgumentException("Expecting a Jcf, not " + val.GetType() + ".", "val");
+                    break;
+                case JcfType.List:
+                    if(val is List<Jcf> list) res.Item2[res.Item3] = list;
+                    else throw new ArgumentException("Expecting a List<Jcf>, not " + val.GetType() + ".", "val");
+                    break;
             }
         }
 
@@ -46,46 +50,27 @@ namespace Jay.Config
         public void SetSub(string key, Jcf sub) => _subs[key] = sub;
         public void SetList(string key, List<Jcf> list) => _lists[key] = list;
 
-        public IEnumerator<KeyValuePair<string, string>> EnumerateValues()
+        protected (Jcf, Dictionary, string, JcfType) Route(string key)
         {
-            foreach(var kvp in _values) yield return kvp;
-        }
-
-        public IEnumerator<KeyValuePair<string, List<Jcf>>> EnumerateLists()
-        {
-            foreach(var kvp in _lists) yield return kvp;
-        }
-
-        public IEnumerator<KeyValuePair<string, Jcf>> EnumerateSubs()
-        {
-            foreach(var kvp in _subs) yield return kvp;
-        }
-
-        public IEnumerator<KeyValuePair<string, string>> EnumerateValues(string target)
-        {
-            int split = target.IndexOf(".");
+            int split = key.IndexOf(".");
             if(split == -1)
             {
-                if(_subs.ContainsKey(target)) { return _subs[target].EnumerateValues(); }
-                throw new ArgumentException("Invalid key: " + target);
+                if(_values.ContainsKey(key)) return (this, _values, key, JcfType.Value);
+                else if(_subs.ContainsKey(key)) return (this, _subs, key, JcfType.Jcf);
+                else if(_lists.ContainsKey(key)) return (this, _lists, key, JcfType.List);
+                else throw new ArgumentException("Invalid key: " + key, "key");
             }
             else
             {
-                string pre = target.Substring(0, split);
-                string post = target.Substring(split + 1);
+                string pre = key.Substring(0, split);
+                string post = key.Substring(split + 1);
                 if(_subs.ContainsKey(pre))
                 {
-                    try
-                    {
-                        return _subs[pre].EnumerateValues(post);
-                    }
-                    catch(ArgumentException e)
-                    {
-                        throw new ArgumentException(e.Message + " in " + pre, e);
-                    }
+                    try { return _subs[pre].Route(post); }
+                    catch(ArgumentException e) { throw new ArgumentException(e.Message + " in " + pre, "key", e); }
                 }
+                throw new ArgumentException("Invalid partial key: " + pre, "key");
             }
-            throw new ArgumentException("Invalid partial key: " + target);
         }
 
         public Jcf()
@@ -165,6 +150,8 @@ namespace Jay.Config
             for(int i = 0; i < depth; i++) res += " ";
             return res;
         }
+
+        protected enum JcfType { Value, Jcf, List }
     }
 
     public static class JcfParser
