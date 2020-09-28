@@ -23,7 +23,9 @@ namespace Jay.Config
         {
             var res = Route(key);
             if(res.Item4 == JcfType.Value) return res.Item1.Lookup(res.Item3);
-            return res.Item2[res.Item3];
+            if(res.Item4 == JcfType.Jcf) return ((Dictionary<string, Jcf>)res.Item2)[res.Item3];
+            else return ((Dictionary<string, List<Jcf>>)res.Item2)[res.Item3];
+            return null;
         }
 
         private void SetKey(string key, object val)
@@ -32,15 +34,15 @@ namespace Jay.Config
             switch(res.Item4)
             {
                 case JcfType.Value:
-                    if(val is string str) res.Item2[res.Item3] = str;
+                    if(val is string str) ((Dictionary<string, string>)res.Item2)[res.Item3] = str;
                     else throw new ArgumentException("Expecting a string, not " + val.GetType() + ".", "val");
                     break;
                 case JcfType.Jcf:
-                    if(val is Jcf jcf) res.Item2[res.Item3] = jcf;
+                    if(val is Jcf jcf) ((Dictionary<string, Jcf>)res.Item2)[res.Item3] = jcf;
                     else throw new ArgumentException("Expecting a Jcf, not " + val.GetType() + ".", "val");
                     break;
                 case JcfType.List:
-                    if(val is List<Jcf> list) res.Item2[res.Item3] = list;
+                    if(val is List<Jcf> list) ((Dictionary<string, List<Jcf>>)res.Item2)[res.Item3] = list;
                     else throw new ArgumentException("Expecting a List<Jcf>, not " + val.GetType() + ".", "val");
                     break;
             }
@@ -50,7 +52,7 @@ namespace Jay.Config
         public void SetSub(string key, Jcf sub) => _subs[key] = sub;
         public void SetList(string key, List<Jcf> list) => _lists[key] = list;
 
-        protected (Jcf, Dictionary, string, JcfType) Route(string key)
+        protected (Jcf, object, string, JcfType) Route(string key)
         {
             int split = key.IndexOf(".");
             if(split == -1)
