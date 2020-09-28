@@ -18,10 +18,10 @@ namespace Jay.IO.Logging
 
         private SimpleLogger() {}
 
-        public override void Log(string message) => Log(message, LogSeverity.Message);
-        public override void Log(object message) => Log(message.ToString());
+        public void Log(string message) => Log(message, LogSeverity.Message);
+        public void Log(object message) => Log(message.ToString());
 
-        public override void Log(string message, LogSeverity sev) => Console.WriteLine($"{sev.ToString().ToUpper()}\t{message}");
-        public override void Log(object message, LogSeverity sev) => Log(message.ToString(), sev);
+        public void Log(string message, LogSeverity sev) => Console.WriteLine($"{sev.ToString().ToUpper()}\t{message}");
+        public void Log(object message, LogSeverity sev) => Log(message.ToString(), sev);
     }
 }

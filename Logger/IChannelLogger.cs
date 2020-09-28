@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Jay.IO.Logging
 {
@@ -27,28 +28,28 @@ namespace Jay.IO.Logging
             _current = 0;
         }
 
-        public override void AddChannel(TextWriter target) => _channels.Add(target);
-        public override TextWriter GetChannel(int index) => _channels[index];
-        public override TextWriter GetDefault() => _channels[_current];
-        public override void AddPredicate(Func<string, LogSeverity, bool> predicate, int index) => throw new NotImplementedException();
-        public override void RemovePredicates(int index) => throw new NotImplementedException();
+        public void AddChannel(TextWriter target) => _channels.Add(target);
+        public TextWriter GetChannel(int index) => _channels[index];
+        public TextWriter GetDefault() => _channels[_current];
+        public void AddPredicate(Func<string, LogSeverity, bool> predicate, int index) => throw new NotImplementedException();
+        public void RemovePredicates(int index) => throw new NotImplementedException();
 
-        public override void RemoveChannel(int index)
+        public void RemoveChannel(int index)
         {
             if(_channels.Count == 1) throw new ArgumentException("Can't remove the last channel.", "index");
             _channels.Remove(index);
         }
 
-        public override void SetDefault(int index)
+        public void SetDefault(int index)
         {
             if(index >= _channels.Count) throw new ArgumentException("Can't set default. Index out of range.", "index");
             _current = index;
         }
 
-        public override void Log(string message) => Log(message, LogSeverity.Message);
-        public override void Log(object message) => Log(message.ToString());
-        public override void Log(object message, LogSeverity severity) => Log(message.ToString(), severity);
-        public override void Log(string message, LogSeverity severity) =>
+        public void Log(string message) => Log(message, LogSeverity.Message);
+        public void Log(object message) => Log(message.ToString());
+        public void Log(object message, LogSeverity severity) => Log(message.ToString(), severity);
+        public void Log(string message, LogSeverity severity) =>
             GetDefault().WriteLine($"{severity.ToString().ToUpper()}\t{message}");
     }
 
@@ -74,12 +75,12 @@ namespace Jay.IO.Logging
             };
         }
 
-        public override void AddChannel(TextWriter target) => throw new NotImplementedException();
-        public override TextWriter GetDefault() => throw new NotImplementedException();
-        public override void RemoveChannel(int index) => throw new NotImplementedException();
-        public override void SetDefault(int index) => throw new NotImplementedException();
+        public void AddChannel(TextWriter target) => throw new NotImplementedException();
+        public TextWriter GetDefault() => throw new NotImplementedException();
+        public void RemoveChannel(int index) => throw new NotImplementedException();
+        public void SetDefault(int index) => throw new NotImplementedException();
 
-        public override TextWriter GetChannel(int index)
+        public TextWriter GetChannel(int index)
         {
             switch(index)
             {
@@ -89,7 +90,7 @@ namespace Jay.IO.Logging
             }
         }
 
-        public override void AddPredicate(Func<string, LogSeverity, bool> predicate, int index)
+        public void AddPredicate(Func<string, LogSeverity, bool> predicate, int index)
         {
             switch(index)
             {
@@ -99,7 +100,7 @@ namespace Jay.IO.Logging
             }
         }
 
-        public override void RemovePredicates(int index)
+        public void RemovePredicates(int index)
         {
             switch(index)
             {
@@ -109,11 +110,11 @@ namespace Jay.IO.Logging
             }
         }
 
-        public override void Log(string message) => Log(message, LogSeverity.Message);
-        public override void Log(object message) => Log(message.ToString());
-        public override void Log(object message, LogSeverity severity) => Log(message.ToString(), severity);
+        public void Log(string message) => Log(message, LogSeverity.Message);
+        public void Log(object message) => Log(message.ToString());
+        public void Log(object message, LogSeverity severity) => Log(message.ToString(), severity);
 
-        public override void Log(string message, LogSeverity severity)
+        public void Log(string message, LogSeverity severity)
         {
             string fmat = $"{severity.ToString().ToUpper()}\t{message}";
             if(_stdoutPred.Any(x => x(message, severity))) _stdout.WriteLine(fmat);

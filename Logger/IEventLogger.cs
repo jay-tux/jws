@@ -20,7 +20,7 @@ namespace Jay.IO.Logging
         public event EventHandler<LogEventArgs> LogErrorEvent;
         public event EventHandler<LogEventArgs> LogDebugEvent;
 
-        public override void Log(string message)
+        public void Log(string message)
         {
             LogEventArgs args = new LogEventArgs(LogSeverity.Message, message);
             if(FirePre) Fire(args);
@@ -28,7 +28,7 @@ namespace Jay.IO.Logging
             if(!FirePre) Fire(args);
         }
 
-        public override void Log(string message, LogSeverity severity)
+        public void Log(string message, LogSeverity severity)
         {
             LogEventArgs args = new LogEventArgs(severity, message);
             if(FirePre) Fire(args);
@@ -36,8 +36,8 @@ namespace Jay.IO.Logging
             if(!FirePre) Fire(args);
         }
 
-        public override void Log(object message) => Log(message.ToString());
-        public override void Log(object message, LogSeverity severity) => Log(message, severity);
+        public void Log(object message) => Log(message.ToString());
+        public void Log(object message, LogSeverity severity) => Log(message, severity);
 
         public abstract void CascadeLog(string message);
         public abstract void CascadeLog(string message, LogSeverity severity);
