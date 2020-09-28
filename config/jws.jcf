@@ -6,7 +6,25 @@ JWS: {
     }
     Boot: {
         Commands: []
-        Port: 1300
+    }
+    Listener: {
+        State: Debug
+        Debug: {
+            Port: 1300
+            Prefixes: [
+                {
+                    Entry: https://localhost
+                }
+            ]
+        }
+        Production: {
+            Port: 80
+            Prefixes: [
+                {
+                    Entry: https://*.yourdomain.extension
+                }
+            ]
+        }
     }
     Services: {
         Internals: {}
