@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Jay.IO.Logging
@@ -37,7 +38,7 @@ namespace Jay.IO.Logging
         public void RemoveChannel(int index)
         {
             if(_channels.Count == 1) throw new ArgumentException("Can't remove the last channel.", "index");
-            _channels.Remove(index);
+            _channels.RemoveAt(index);
         }
 
         public void SetDefault(int index)
@@ -66,7 +67,6 @@ namespace Jay.IO.Logging
         {
             _stdout = Console.Out;
             _stderr = Console.Error;
-            _useStdout = true;
             _stdoutPred = new List<Func<string, LogSeverity, bool>>() {
                 (s, l) => (l == LogSeverity.Message || l == LogSeverity.Debug)
             };

@@ -1,6 +1,7 @@
 using System;
 using Jay.IO.Logging;
 using System.IO;
+using Jay.Config;
 
 namespace Jay.Web.Server
 {

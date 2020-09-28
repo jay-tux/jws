@@ -54,11 +54,11 @@ namespace Jay.IO.Logging
             }
         }
 
-        protected virtual void OnLog(LogEventArgs args) => LogEvent?.Invoke(args);
-        protected virtual void OnLogWarning(LogEventArgs args) => LogWarningEvent?.Invoke(args);
-        protected virtual void OnLogMessage(LogEventArgs args) => LogMessageEvent?.Invoke(args);
-        protected virtual void OnLogError(LogEventArgs args) => LogErrorEvent?.Invoke(args);
-        protected virtual void OnLogDebug(LogEventArgs args) => LogDebugEvent?.Invoke(args);
+        protected virtual void OnLog(LogEventArgs args) => LogEvent?.Invoke(this, args);
+        protected virtual void OnLogWarning(LogEventArgs args) => LogWarningEvent?.Invoke(this, args);
+        protected virtual void OnLogMessage(LogEventArgs args) => LogMessageEvent?.Invoke(this, args);
+        protected virtual void OnLogError(LogEventArgs args) => LogErrorEvent?.Invoke(this, args);
+        protected virtual void OnLogDebug(LogEventArgs args) => LogDebugEvent?.Invoke(this, args);
     }
 
     public class LogEventArgs : EventArgs

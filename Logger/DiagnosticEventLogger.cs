@@ -5,7 +5,7 @@ namespace Jay.IO.Logging
 {
     public abstract class DiagnosticEventLogger : DefaultEventLogger
     {
-        public void Log(string message)
+        public new void Log(string message)
         {
             LogEventArgs args = new DiagnosticLogEventArgs(LogSeverity.Message, message);
             if(FirePre) Fire(args);
@@ -13,7 +13,7 @@ namespace Jay.IO.Logging
             if(!FirePre) Fire(args);
         }
 
-        public void Log(string message, LogSeverity severity)
+        public new void Log(string message, LogSeverity severity)
         {
             LogEventArgs args = new DiagnosticLogEventArgs(severity, message);
             if(FirePre) Fire(args);

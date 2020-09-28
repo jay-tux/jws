@@ -1,23 +1,26 @@
 using System;
 using System.Net;
 using Jay.Ext;
+using Jay.Config;
+using Jay.IO.Logging;
 
 namespace Jay.Web.Server
 {
     public class Listener
     {
-        private HttpListener Listener { get; private set; }
+        private HttpListener _listener { get; set; }
         public int Port { get; private set; }
         public string ListenerState { get; private set; }
+
         public Listener()
         {
             if(!HttpListener.IsSupported)
             {
-                Logger.LogError(this, "Failed to start HttpListener: not supported.");
+                StaticLogger.LogError(this, "Failed to start HttpListener: not supported.");
                 Environment.Exit(1);
             }
-            Listener = new HttpListener();
-            GetPrefixes().ForEach(prefix => Listener.Add(prefix));
+            _listener = new HttpListener();
+            GetPrefixes().ForEach(prefix => _listener.Prefixes.Add(prefix));
         }
 
         private void GetState()
@@ -31,13 +34,13 @@ namespace Jay.Web.Server
                 }
                 else
                 {
-                    Logger.LogWarning(this, $"JWS.Listener.State config variable is invalid; expected string. Using Debug configuration.");
+                    StaticLogger.LogWarning(this, $"JWS.Listener.State config variable is invalid; expected string. Using Debug configuration.");
                     ListenerState = "Debug";
                 }
             }
-            catch(JWSException jwse)
+            catch(JcfException)
             {
-                Logger.LogWarning(this, $"JWS.Listener.State config variable doesn't exist. Falling back to Debug.");
+                StaticLogger.LogWarning(this, $"JWS.Listener.State config variable doesn't exist. Falling back to Debug.");
                 ListenerState = "Debug";
             }
         }
@@ -51,6 +54,7 @@ namespace Jay.Web.Server
         {
             GetState();
             GetPort();
+            return new string[0];
         }
     }
 }

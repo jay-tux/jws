@@ -25,7 +25,6 @@ namespace Jay.Config
             if(res.Item4 == JcfType.Value) return res.Item1.Lookup(res.Item3);
             if(res.Item4 == JcfType.Jcf) return ((Dictionary<string, Jcf>)res.Item2)[res.Item3];
             else return ((Dictionary<string, List<Jcf>>)res.Item2)[res.Item3];
-            return null;
         }
 
         private void SetKey(string key, object val)
@@ -115,11 +114,11 @@ namespace Jay.Config
         {
             try
             {
-                return this[todo];
+                return (string)this[todo];
             }
             catch(Exception)
             {
-                if(Parent != null) { return Parent[todo]; }
+                if(Parent != null) { return (string)Parent[todo]; }
                 throw new NullReferenceException("Can't find " + todo);
             }
         }
