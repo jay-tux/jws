@@ -22,7 +22,7 @@ namespace Jay.Config
         private object GetKey(string key)
         {
             var res = Route(key);
-            if(res.Item4 == JcfType.Value) return res.Item1.Lookup(res.Item3);
+            if(res.Item4 == JcfType.Value) return res.Item1.Translate(((Dictionary<string, string>)res.Item2)[res.Item3]);
             if(res.Item4 == JcfType.Jcf) return ((Dictionary<string, Jcf>)res.Item2)[res.Item3];
             else return ((Dictionary<string, List<Jcf>>)res.Item2)[res.Item3];
         }

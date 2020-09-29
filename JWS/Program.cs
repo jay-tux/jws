@@ -20,6 +20,7 @@ namespace Jay.Web.Server
 
             StaticLogger.LogMessage("_driver", $"Starting Listener loop...");
             Listener server = new Listener();
+            foreach(var v in server.Loop()) {}
 
             StaticLogger.LogMessage("_driver", $"Server shut down at {DateTime.Now.ToString()}.");
         }
