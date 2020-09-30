@@ -61,6 +61,9 @@ namespace Jay.Web.Server
 
     public class Response
     {
+        private string _target;
+        private bool _error;
+        private bool _finished;
         public Encoding ContentEncoding;
         public long ContentLength;
         public string MIMEType;
@@ -71,30 +74,10 @@ namespace Jay.Web.Server
 
         private Response() {}
 
-        private static string LoadError(int code)
+        private string LoadError(int code)
         {
-            string fallback = "<html><head><meta charset=\"utf-8\" /><title>JWS - HTTP " + code.ToString() + "</title></head>"
+            string fallback = "<html><head><meta charset=\"utf-8\" /><title>" + Listener.ServerName + " - HTTP " + code.ToString() + "</title></head>"
                 + "<body>The server has run into an HTTP " + code.ToString() + " status.</body>";
-
-            string msg = null;
-            string generic = "";
-            try
-            {
-                object n = Program.Settings["JWS.Server.Name"];
-                if(n is string name)
-                {
-                    generic = "<html><head><meta charset=\"utf-8\" /><title>" + name + " - HTTP " + code.ToString() + "</title></head>"
-                        + "<body>The server has run into an HTTP " + code.ToString() + " status.</body>";
-                }
-                else
-                {
-                    msg = "Server name (JWS.Server.Name) should be a string. Using fallback JWS.";
-                }
-            }
-            catch(ArgumentException)
-            {
-                msg = "Server name (JWS.Server.Name) not set in config file. Using fallback JWS.";
-            }
 
             if(File.Exists($"{Listener.ErrorDir}/{code}.html"))
             {
@@ -105,35 +88,62 @@ namespace Jay.Web.Server
                 catch(IOException)
                 {
                     StaticLogger.LogWarning("_resolver", $"Tried to load existing error file {Listener.ErrorDir}/{code}.html, but couldn't read it. Returning generic error file.");
-                    if(msg == null)
-                    {
-                        return generic;
-                    }
-                    else
-                    {
-                        StaticLogger.LogWarning("_resolver", msg);
-                        return fallback;
-                    }
+                    return fallback;
                 }
             }
             else
             {
                 StaticLogger.LogWarning("_resolver", $"Tried to load non-existent error file {Listener.ErrorDir}/{code}.html. Returning generic error file.");
-                if(msg == null)
-                {
-                    return generic;
-                }
-                else
-                {
-                    StaticLogger.LogWarning("_resolver", msg);
-                    return fallback;
-                }
+                return fallback;
             }
         }
 
-        public static Response ToRequest(Request r)
+        private void AttemptRoute()
         {
-            if(r.Path == "/")
+            try
+            {
+                object rt = Program.Settings["JWS.Routing." + _target];
+                string state = Listener.ListenerState;
+                if(rt is string route)
+                {
+                    StaticLogger.LogDebug("_resolver", $"Route JWS.Routing.{_target} resolved to {route}");
+                    _target = route;
+                    try
+                    {
+                        object c = Program.Settings[$"JWS.Listener.{state}.Routing"];
+                        if(c is string choice)
+                        {
+                            if(choice == "302")
+                            {
+                                StatusCode = 302;
+                                Headers.Add(HttpResponseHeader.Location, _target);
+                                Buffer = new byte[0];
+                                _finished = true;
+                            }
+                            else if(choice != "stay") StaticLogger.LogWarning("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " +
+                                "Valid options are 302 and stay. Using fallback stay.");
+                        }
+                        else
+                        {
+                            StaticLogger.LogWarning("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.");
+                        }
+                    }
+                    catch(ArgumentException)
+                    {
+                        StaticLogger.LogWarning("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.");
+                    }
+                }
+                else
+                {
+                    StaticLogger.LogWarning("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...");
+                }
+            }
+            catch(ArgumentException) {}
+        }
+
+        private void AttemptRootRoute()
+        {
+            if(_target == "/")
             {
                 StaticLogger.LogDebug("_resolver", "Client requested server root (/). Attempting to resolve...");
                 try
@@ -141,54 +151,56 @@ namespace Jay.Web.Server
                     object rt = Program.Settings["JWS.Server.Root"];
                     if(rt is string root)
                     {
-                        r.Path = root;
+                        _target = root;
                     }
                     else
                     {
                         StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.");
-                        r.Path = "/index.html";
+                        _target = "/index.html";
                     }
                 }
                 catch(ArgumentException)
                 {
                     StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.");
-                    r.Path = "/index.html";
+                    _target = "/index.html";
                 }
             }
+        }
 
-            byte[] buffer; int code = 200; bool error = false;
-            if(File.Exists(Listener.HTMLDir + r.Path))
+        private void AttemptLiteral()
+        {
+            if(File.Exists(Listener.HTMLDir + _target))
             {
                 try
                 {
-                    buffer = Encoding.UTF8.GetBytes(File.ReadAllText(Listener.HTMLDir + r.Path));
+                    Buffer = Encoding.UTF8.GetBytes(File.ReadAllText(Listener.HTMLDir + _target));
                 }
                 catch(IOException)
                 {
-                    StaticLogger.LogWarning("_resolver", $"Client requested {r.Path}; which resolved to existing file {Listener.HTMLDir + r.Path}, but couldn't be read. Returning 403.");
-                    code = 403;
-                    buffer = Encoding.UTF8.GetBytes(LoadError(code));
-                    error = true;
+                    StaticLogger.LogWarning("_resolver", $"Client requested {_target}; which resolved to existing file {Listener.HTMLDir + _target}, but couldn't be read." +
+                        " Returning 403.");
+                    StatusCode = 403;
+                    Buffer = Encoding.UTF8.GetBytes(LoadError(StatusCode));
+                    _error = true;
                 }
             }
             else
             {
-                StaticLogger.LogMessage("_resolver", $"Client requested {r.Path}; which resolved to non-existent file {Listener.HTMLDir + r.Path}. Returning 404.");
-                code = 404;
-                buffer = Encoding.UTF8.GetBytes(LoadError(404));
-                error = true;
+                StaticLogger.LogMessage("_resolver", $"Client requested {_target}; which resolved to non-existent file {Listener.HTMLDir + _target}. Returning 404.");
+                StatusCode = 404;
+                Buffer = Encoding.UTF8.GetBytes(LoadError(404));
+                _error = true;
             }
 
-            string mime = "text/html";
-            if(!error)
+            if(!_error)
             {
-                string ext = r.Path.Split('.').Last();
+                string ext = _target.Split('.').Last();
                 try
                 {
                     object m = Program.Settings["JWS.Server.FileAssoc." + ext];
                     if(m is string mi)
                     {
-                        mime = mi;
+                        MIMEType = mi;
                     }
                     else
                     {
@@ -200,16 +212,29 @@ namespace Jay.Web.Server
                     StaticLogger.LogWarning("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
                 }
             }
+        }
 
-            return new Response() {
+        public static Response ToRequest(Request r)
+        {
+            Response resp = new Response() {
+                _finished = false,
+                _target = r.Path,
+                _error = false,
+                StatusCode = 200,
                 ContentEncoding = Encoding.UTF8,
-                ContentLength = buffer.Length,
-                MIMEType = mime,
-                Cookies = null,
-                Headers = null,
-                StatusCode = code,
-                Buffer = buffer
+                MIMEType = "text/html",
+                Cookies = new CookieCollection(),
+                Headers = new WebHeaderCollection(),
+                Buffer = null
             };
+            resp.Headers.Add(HttpResponseHeader.Server, Listener.ServerName);
+
+            resp.AttemptRootRoute();
+            if(!resp._finished) resp.AttemptRoute();
+            if(!resp._finished) resp.AttemptLiteral();
+            resp.ContentLength = resp.Buffer.Length;
+
+            return resp;
         }
 
         public void Write(HttpListenerResponse resp)
