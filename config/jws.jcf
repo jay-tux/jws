@@ -3,6 +3,50 @@ JWS: {
         Base: /usr/bin/jws
         Data: /usr/local/etc/jws
         Internals: $Data$/int
+        HTML: @Home/.config/jws/html
+        Error: @Home/.config/jws/error
+    }
+    Server: {
+        Root: /index.html
+        Name: _jws_example
+        FileAssoc: {
+            aac: audio/aac
+            bin: application/octet-stream
+            bmp: image/bmp
+            bz: application/x-bzip
+            css: text/css
+            csv: text/csv
+            gif: image/gif
+            htm: text/html
+            html: text/html
+            ico: image/vnd.microsoft.icon
+            jpeg: image/jpeg
+            jpg: image/jpg
+            js: text/javascript
+            json: application/json
+            mid: audio/midi
+            midi: audio/midi
+            mp3: audio/mpeg
+            mpeg: video/mpeg
+            oga: audio/ogg
+            ogv: audio/ogg
+            ogx: application/ogg
+            png: image/png
+            pdf: application/pdf
+            rar: application/vnd.rar
+            rtf: application/rtf
+            svg: image/svg+xml
+            tiff: image/tiff
+            ttf: font/ttf
+            txt: text/plain
+            wav: audio/wav
+            weba: audio/webm
+            webm: video/webm
+            webp: image/webp
+            xhtml: application/xhtml+xml
+            xml: application/xml
+            zip: application/zip
+        }
     }
     Boot: {
         Commands: []
@@ -94,5 +138,7 @@ JWS: {
     Services: {
         Internals: {}
         Externals: []
+    }
+    Routing: {
     }
 }

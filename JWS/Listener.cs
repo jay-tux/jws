@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.IO;
 using System.Collections.Generic;
 using Jay.Ext;
 using Jay.Config;
@@ -9,6 +10,8 @@ namespace Jay.Web.Server
 {
     public class Listener
     {
+        public static string HTMLDir { get; private set; }
+        public static string ErrorDir { get; private set; }
         private HttpListener _listener { get; set; }
         public int Port { get; private set; }
         public string ListenerState { get; private set; }
@@ -28,7 +31,114 @@ namespace Jay.Web.Server
             });
             _listener.Start();
             Stopped = false;
+
+            LoadPaths();
             StaticLogger.LogMessage(this, "Listener started.");
+        }
+
+        public void LoadPaths()
+        {
+            try
+            {
+                object h = Program.Settings["JWS.Paths.HTML"];
+                if(h is string html)
+                {
+                    try
+                    {
+                        html = html.Replace("@Home", Program.GetHome()).Replace("@Data", Program.Data());
+                        if(Directory.Exists(html))
+                        {
+                            if(html.EndsWith("/")) html = html.Substring(0, html.Length - 1);
+                            HTMLDir = html;
+                            StaticLogger.LogMessage(this, $"Set HTML dir to {html}.");
+                        }
+                        else
+                        {
+                            StaticLogger.LogError(this, $"HTML Dir in config file ({html}) doesn't exist. No fallback available.");
+                            Program.Instance.Exit(3);
+                        }
+                    }
+                    catch(IOException)
+                    {
+                        StaticLogger.LogError(this, $"HTML Dir in config file doesn't exist. No fallback available.");
+                        Program.Instance.Exit(3);
+                    }
+                }
+            }
+            catch(ArgumentException)
+            {
+                string pth = Program.GetHome() + "/.config/jws/html/";
+                StaticLogger.LogWarning(this, $"HTML Dir not configured in config file (JWS.Paths.HTML). Trying fallback {pth}.");
+                try
+                {
+                    if(Directory.Exists(pth))
+                    {
+                        HTMLDir = pth;
+                        StaticLogger.LogMessage(this, $"Set HTML dir to {pth}.");
+                    }
+                    else
+                    {
+                        StaticLogger.LogError(this, $"Fallback HTML Dir doesn't exist. No fallback available.");
+                        Program.Instance.Exit(3);
+                    }
+                }
+                catch(IOException)
+                {
+                    StaticLogger.LogError(this, $"Fallback HTML Dir doesn't exist. No fallback available.");
+                    Program.Instance.Exit(3);
+                }
+            }
+
+            try
+            {
+                object e = Program.Settings["JWS.Paths.Error"];
+                if(e is string err)
+                {
+                    try
+                    {
+                        err = err.Replace("@Home", Program.GetHome()).Replace("@Data", Program.Data());
+                        if(Directory.Exists(err))
+                        {
+                            if(err.EndsWith("/")) err = err.Substring(0, err.Length - 1);
+                            ErrorDir = err;
+                            StaticLogger.LogMessage(this, $"Set Error dir to {err}.");
+                        }
+                        else
+                        {
+                            StaticLogger.LogError(this, $"Error Dir in config file ({err}) doesn't exist. No fallback available.");
+                            Program.Instance.Exit(4);
+                        }
+                    }
+                    catch(IOException)
+                    {
+                        StaticLogger.LogError(this, $"Error Dir in config file doesn't exist. No fallback available.");
+                        Program.Instance.Exit(4);
+                    }
+                }
+            }
+            catch(ArgumentException)
+            {
+                string pth = Program.GetHome() + "/.config/jws/error/";
+                StaticLogger.LogWarning(this, $"Error Dir not configured in config file (JWS.Paths.Error). Trying fallback {pth}.");
+                try
+                {
+                    if(Directory.Exists(pth))
+                    {
+                        ErrorDir = pth;
+                        StaticLogger.LogMessage(this, $"Set Error dir to {pth}.");
+                    }
+                    else
+                    {
+                        StaticLogger.LogError(this, $"Fallback Error Dir doesn't exist. No fallback available.");
+                        Program.Instance.Exit(4);
+                    }
+                }
+                catch(IOException)
+                {
+                    StaticLogger.LogError(this, $"Fallback Error Dir doesn't exist. No fallback available.");
+                    Program.Instance.Exit(4);
+                }
+            }
         }
 
         public IEnumerable<(Request, Response)> Loop()

@@ -153,6 +153,33 @@ namespace Jay.Config
         }
 
         protected enum JcfType { Value, Jcf, List }
+
+        protected virtual string SaveString(int depth)
+        {
+            if(_subs.Count == 0 && _values.Count == 0 && _lists.Count == 0) return "{}";
+
+            string d = "";
+            for(int i = 0; i < depth; i++) d += " ";
+
+            string res = (depth == 0) ? "" : "{\n";
+            _subs.ForEach(sub => res += $"{d}{sub.Key}: {sub.Value.SaveString(depth + 4)}\n");
+            _values.ForEach(val => res += $"{d}{val.Key}: {val.Value}\n");
+            _lists.ForEach(l => res += ListString(depth, l.Key));
+
+            res += (depth == 0) ? "" : $"{d.Substring(0, d.Length - 4)}}}";
+            return res;
+        }
+
+        private string ListString(int depth, string index)
+        {
+            string d = "";
+            for(int i = 0; i < depth; i++) d += " ";
+
+            if(_lists[index].Count == 0) return $"{d}{index}: []\n";
+            return $"{d}{index}: [\n" + string.Join("\n", _lists[index].Select(sub => $"{d}    {sub.SaveString(depth + 8)}")) + $"\n{d}]\n";
+        }
+
+        public void Save(string filename) => File.WriteAllText(filename, SaveString(0));
     }
 
     public static class JcfParser

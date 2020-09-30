@@ -5,16 +5,32 @@ using Jay.Config;
 
 namespace Jay.Web.Server
 {
-    public static class Program
+    public class Program
     {
         public static Jcf Settings;
+        private Jcf _settings;
+        public static Program Instance;
+        public event EventHandler OnExit;
+
         public static void Main(string[] args)
         {
+            new Program();
+        }
+
+        private Program()
+        {
+            Instance = this;
             StaticLogger.LogMessage("_driver", $"Starting server at {DateTime.Now.ToString()}.");
 
             StaticLogger.LogMessage("_driver", "Loading Settings...");
-            LoadSettings(new string[] {
+            string[] locs = new string[] {
                 GetHome() + "/.config/jws/jws.jcf", Data() + "/jws/jws.jcf"
+            };
+            int loc = LoadSettings(locs);
+            Settings = _settings;
+            OnExit += ((o, e) => {
+                StaticLogger.LogMessage("_driver", $"Attempting to save config file to {locs[loc]} (index {loc}).");
+                _settings.Save(locs[loc]);
             });
             StaticLogger.LogMessage("_driver", "Settings succesfully loaded.");
 
@@ -23,10 +39,12 @@ namespace Jay.Web.Server
             foreach(var v in server.Loop()) {}
 
             StaticLogger.LogMessage("_driver", $"Server shut down at {DateTime.Now.ToString()}.");
+            Exit(0);
         }
 
-        private static void LoadSettings(string[] locations)
+        private int LoadSettings(string[] locations)
         {
+            int ret = 0;
             string f = "";
             foreach(string loc in locations)
             {
@@ -34,8 +52,9 @@ namespace Jay.Web.Server
                 try
                 {
                     f = File.ReadAllText(loc);
+                    break;
                 }
-                catch(IOException) {}
+                catch(IOException) { ret++; }
             }
 
             if(f == "")
@@ -44,7 +63,8 @@ namespace Jay.Web.Server
                 Environment.Exit(2);
             }
 
-            Settings = JcfParser.Parse(f);
+            _settings = JcfParser.Parse(f);
+            return ret;
         }
 
         public static string GetHome()
@@ -65,12 +85,19 @@ namespace Jay.Web.Server
             var platform = Environment.OSVersion.Platform;
             if(platform == PlatformID.Unix || platform == PlatformID.MacOSX)
             {
-                return Environment.GetEnvironmentVariable("/usr/local/etc");
+                return "/usr/local/etc";
             }
             else
             {
                 return Environment.ExpandEnvironmentVariables("%APPDATA%");
             }
+        }
+
+        public void Exit(int code)
+        {
+            StaticLogger.LogMessage(this, "Running OnExit hooks...");
+            OnExit?.Invoke("_driver", new EventArgs());
+            Environment.Exit(code);
         }
     }
 }

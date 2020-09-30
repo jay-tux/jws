@@ -17,8 +17,8 @@ namespace Jay.Web.Server
         public CookieCollection Cookies;
         public NameValueCollection Headers;
         public string Method;
-        public string Query;
-        public NameValueCollection Getters;
+        public string Path;
+        public NameValueCollection Queries;
         public string Content;
 
         public Request(HttpListenerRequest r)
@@ -29,28 +29,33 @@ namespace Jay.Web.Server
             Cookies = r.Cookies;
             Headers = r.Headers;
             Method = r.HttpMethod;
-            Query = string.Join("", r.Url.Segments);
-            Getters = r.QueryString;
+            Path = string.Join("", r.Url.Segments);
+            Queries = r.QueryString;
             Content = (r.HasEntityBody) ? new StreamReader(r.InputStream, ContentEncoding).ReadToEnd() : "";
         }
 
         public override string ToString()
         {
-            /*List<string> c = new List<string>();
-            foreach(var cookie in Cookies)
+            string cookies = "";
+            for(int i = 0; i < Cookies.Count; i++)
             {
-                c.Add($"Cookie {cookie.Name}: {cookie.Value}");
+                cookies += $"\n\tCookie #{i}: {Cookies[i]}";
             }
-            string cookies = string.Join("\n\t", c);*/
-            string cookies = "-- cookies failed --";
+            if(Cookies.Count == 0) cookies = "-- no cookies --";
             List<string> h = new List<string>();
             foreach(var key in Headers.AllKeys)
             {
                 h.Add($"{key}: {Headers[key]}");
             }
+            List<string> q = new List<string>();
+            foreach(var key in Queries.AllKeys)
+            {
+                q.Add($"{key}: {Queries[key]}");
+            }
             string headers = string.Join("\n\t", h);
-            return $"Encoding: {ContentEncoding}\nMIME Type: {MIMEType}\nHTTP Method: {Method}\nQuery string: {Query}\nContent: '{Content}' (Length: {ContentLength})\n" +
-                $"Headers: {headers}\nCookies: {cookies}";
+            string queries = string.Join("\n\t", q);
+            return $"Encoding: {ContentEncoding}\nMIME Type: {MIMEType}\nHTTP Method: {Method}\nQuery string: {Path}\nContent: '{Content}' (Length: {ContentLength})\n" +
+                $"Headers: {headers}\n\nQueries: {queries}\nCookies: {cookies}";
         }
     }
 
@@ -65,16 +70,144 @@ namespace Jay.Web.Server
         public byte[] Buffer;
 
         private Response() {}
+
+        private static string LoadError(int code)
+        {
+            string fallback = "<html><head><meta charset=\"utf-8\" /><title>JWS - HTTP " + code.ToString() + "</title></head>"
+                + "<body>The server has run into an HTTP " + code.ToString() + " status.</body>";
+
+            string msg = null;
+            string generic = "";
+            try
+            {
+                object n = Program.Settings["JWS.Server.Name"];
+                if(n is string name)
+                {
+                    generic = "<html><head><meta charset=\"utf-8\" /><title>" + name + " - HTTP " + code.ToString() + "</title></head>"
+                        + "<body>The server has run into an HTTP " + code.ToString() + " status.</body>";
+                }
+                else
+                {
+                    msg = "Server name (JWS.Server.Name) should be a string. Using fallback JWS.";
+                }
+            }
+            catch(ArgumentException)
+            {
+                msg = "Server name (JWS.Server.Name) not set in config file. Using fallback JWS.";
+            }
+
+            if(File.Exists($"{Listener.ErrorDir}/{code}.html"))
+            {
+                try
+                {
+                    return File.ReadAllText($"{Listener.ErrorDir}/{code}.html");
+                }
+                catch(IOException)
+                {
+                    StaticLogger.LogWarning("_resolver", $"Tried to load existing error file {Listener.ErrorDir}/{code}.html, but couldn't read it. Returning generic error file.");
+                    if(msg == null)
+                    {
+                        return generic;
+                    }
+                    else
+                    {
+                        StaticLogger.LogWarning("_resolver", msg);
+                        return fallback;
+                    }
+                }
+            }
+            else
+            {
+                StaticLogger.LogWarning("_resolver", $"Tried to load non-existent error file {Listener.ErrorDir}/{code}.html. Returning generic error file.");
+                if(msg == null)
+                {
+                    return generic;
+                }
+                else
+                {
+                    StaticLogger.LogWarning("_resolver", msg);
+                    return fallback;
+                }
+            }
+        }
+
         public static Response ToRequest(Request r)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes("<html><head><title>JWS</title></head><body>You found a page: " + r.Query + ".</body></html>");
+            if(r.Path == "/")
+            {
+                StaticLogger.LogDebug("_resolver", "Client requested server root (/). Attempting to resolve...");
+                try
+                {
+                    object rt = Program.Settings["JWS.Server.Root"];
+                    if(rt is string root)
+                    {
+                        r.Path = root;
+                    }
+                    else
+                    {
+                        StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.");
+                        r.Path = "/index.html";
+                    }
+                }
+                catch(ArgumentException)
+                {
+                    StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.");
+                    r.Path = "/index.html";
+                }
+            }
+
+            byte[] buffer; int code = 200; bool error = false;
+            if(File.Exists(Listener.HTMLDir + r.Path))
+            {
+                try
+                {
+                    buffer = Encoding.UTF8.GetBytes(File.ReadAllText(Listener.HTMLDir + r.Path));
+                }
+                catch(IOException)
+                {
+                    StaticLogger.LogWarning("_resolver", $"Client requested {r.Path}; which resolved to existing file {Listener.HTMLDir + r.Path}, but couldn't be read. Returning 403.");
+                    code = 403;
+                    buffer = Encoding.UTF8.GetBytes(LoadError(code));
+                    error = true;
+                }
+            }
+            else
+            {
+                StaticLogger.LogMessage("_resolver", $"Client requested {r.Path}; which resolved to non-existent file {Listener.HTMLDir + r.Path}. Returning 404.");
+                code = 404;
+                buffer = Encoding.UTF8.GetBytes(LoadError(404));
+                error = true;
+            }
+
+            string mime = "text/html";
+            if(!error)
+            {
+                string ext = r.Path.Split('.').Last();
+                try
+                {
+                    object m = Program.Settings["JWS.Server.FileAssoc." + ext];
+                    if(m is string mi)
+                    {
+                        mime = mi;
+                    }
+                    else
+                    {
+                        StaticLogger.LogWarning("_resolver", $"File associations should be strings; not the case for JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
+                    }
+                }
+                catch(ArgumentException)
+                {
+                    StaticLogger.LogWarning("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
+                }
+            }
+
             return new Response() {
                 ContentEncoding = Encoding.UTF8,
                 ContentLength = buffer.Length,
-                MIMEType = "text/html",
+                MIMEType = mime,
                 Cookies = null,
                 Headers = null,
-                StatusCode = 200,
+                StatusCode = code,
                 Buffer = buffer
             };
         }
@@ -114,7 +247,16 @@ namespace Jay.Web.Server
         public override string ToString()
         {
             string headers;
-            string cookies = "-- cookies failed --";
+            string cookies;
+            if(Cookies != null)
+            {
+                cookies = "";
+                for(int i = 0; i < Cookies.Count; i++)
+                {
+                    cookies += $"\n\tCookie #{i}: {Cookies[i]}";
+                }
+            }
+            else cookies = "-- no cookies --";
             if(Headers == null) { headers = "-- no headers --"; }
             else {
                 List<string> h = new List<string>();
