@@ -1,9 +1,6 @@
 JWS: {
-    : contains paths (should contain Base, Data, Internals, HTML and Error)
+    : contains paths (should contain HTML and Error)
     Paths: {
-        Base: /usr/bin/jws
-        Data: /usr/local/etc/jws
-        Internals: $Data$/int
         HTML: @Home/.config/jws/html
         Error: @Home/.config/jws/error
     }
@@ -56,7 +53,7 @@ JWS: {
         Commands: []
     }
     : initialisation for the listener, should contain State and a block defining the State. Such blocks
-    : should contain Port (int) and Prefixes (a list of the form { Entry: prefix })
+    : should contain Port (int) and Prefixes (a list with blocks containing Entry: Prefix)
     Listener: {
         State: Debug
         Debug: {
