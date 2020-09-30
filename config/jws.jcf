@@ -55,7 +55,6 @@ JWS: {
     : initialisation for the listener, should contain State and a block defining the State. Such blocks
     : should contain Port (int), Routing and Prefixes
     : Routing should be stay (send the re-routed page) or 302 (change url)
->>>>>>> devel
     Listener: {
         State: Debug
         Debug: {
