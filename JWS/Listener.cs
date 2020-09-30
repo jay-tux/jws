@@ -14,7 +14,8 @@ namespace Jay.Web.Server
         public static string ErrorDir { get; private set; }
         private HttpListener _listener { get; set; }
         public int Port { get; private set; }
-        public string ListenerState { get; private set; }
+        public static string ListenerState { get; private set; }
+        public static string ServerName { get; private set; }
         public bool Stopped { get; set; }
 
         public Listener()
@@ -33,7 +34,31 @@ namespace Jay.Web.Server
             Stopped = false;
 
             LoadPaths();
+            SetServerName();
             StaticLogger.LogMessage(this, "Listener started.");
+        }
+
+        public void SetServerName()
+        {
+            try
+            {
+                object n = Program.Settings["JWS.Server.Name"];
+                if(n is string name)
+                {
+                    StaticLogger.LogDebug(this, $"Succesfully set Server Name to {name}.");
+                    ServerName = name;
+                }
+                else
+                {
+                    StaticLogger.LogWarning(this, $"JWS.Server.Name should be a string. Using fallback 'JWS'.");
+                    ServerName = "JWS";
+                }
+            }
+            catch(ArgumentException)
+            {
+                StaticLogger.LogWarning(this, $"JWS.Server.Name is undefined. Using fallback 'JWS'.");
+                ServerName = "JWS";
+            }
         }
 
         public void LoadPaths()

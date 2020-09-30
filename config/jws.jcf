@@ -56,10 +56,12 @@ JWS: {
         Commands: []
     }
     : initialisation for the listener, should contain State and a block defining the State. Such blocks
-    : should contain Port (int) and Prefixes (a list of the form { Entry: prefix })
+    : should contain Port (int), Routing and Prefixes
+    : Routing should be stay (send the re-routed page) or 302 (change url)
     Listener: {
         State: Debug
         Debug: {
+            Routing: 302
             Port: 1300
             Prefixes: [
                 {
@@ -68,6 +70,7 @@ JWS: {
             ]
         }
         Production: {
+            Routing: stay
             Port: 80
             Prefixes: [
                 {
@@ -147,7 +150,9 @@ JWS: {
         Internals: {}
         Externals: []
     }
-    : for re-routing urls, currently unused.
+    : for re-routing urls.
     Routing: {
+        /home: /home.html
+        /home/main: /main.html
     }
 }
