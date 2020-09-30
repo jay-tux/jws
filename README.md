@@ -67,11 +67,12 @@ Prefixes are of the form `protocol://domain`, where `protocol` can be any of `ht
  - `sub.domain.ext`, where `sub` can be a wildcard (`*`) or a defined subdomain;  
  - `domain.ext`,  
  - `*`, any domain (not recommended!).  
+
 Recommended settings for prefixes are:  
-| State\SSL | With SSL | Without SSL |
-|---|---|---|
-| Debug | http://localhost | https://localhost |
-| Production | http://*.yourdomain.ext | https://*.yourdomain.ext |
+State\SSL | With SSL | Without SSL  
+--- | --- | ---  
+Debug | `http://localhost` | `https://localhost`  
+Production | `http://*.yourdomain.ext` | `https://*.yourdomain.ext`  
 
 ### Defining Your Own States
 All states are defined like this (always in `JWS.Listener`):
