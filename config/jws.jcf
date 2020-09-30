@@ -1,4 +1,5 @@
 JWS: {
+    : contains paths (should contain Base, Data, Internals, HTML and Error)
     Paths: {
         Base: /usr/bin/jws
         Data: /usr/local/etc/jws
@@ -6,10 +7,12 @@ JWS: {
         HTML: @Home/.config/jws/html
         Error: @Home/.config/jws/error
     }
+    : contains some server settings (should contain Root (reroute for / url), Name and FileAssoc (MIME associations; a block))
     Server: {
         Root: /index.html
         Name: _jws_example
         FileAssoc: {
+            : some frequently used ones, subset of https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
             aac: audio/aac
             bin: application/octet-stream
             bmp: image/bmp
@@ -48,9 +51,12 @@ JWS: {
             zip: application/zip
         }
     }
+    : for startup commands, should contain Commands (a list)
     Boot: {
         Commands: []
     }
+    : initialisation for the listener, should contain State and a block defining the State. Such blocks
+    : should contain Port (int) and Prefixes (a list of the form { Entry: prefix })
     Listener: {
         State: Debug
         Debug: {
@@ -70,6 +76,7 @@ JWS: {
             ]
         }
     }
+    : HTTP status descriptions, source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
     Statusses: {
         100: Continue
         101: Switching Protocol
@@ -135,10 +142,12 @@ JWS: {
         510: Not Extended
         511: Network Authentication Required
     }
+    : currently unused.
     Services: {
         Internals: {}
         Externals: []
     }
+    : for re-routing urls, currently unused.
     Routing: {
     }
 }
