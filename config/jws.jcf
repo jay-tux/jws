@@ -165,7 +165,7 @@ JWS: {
                 Warning: 33m
                 Error: 31m
             }
-            DTFormatting: yyyy-MM-dd HH:mm:ss.ffffff tt
+            DTFormatting: yyyy-MM-dd hh:mm:ss.ffffff tt
             Formatting: (@TYPE in @MOD at @TIME): @MSG
         }
         Debug: {
