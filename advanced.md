@@ -47,16 +47,16 @@ Prefixes are of the form `protocol://domain`, where `protocol` can be any of `ht
  - `domain.ext`,  
  - `*`, any domain (not recommended!).  
 
+ Recommended settings for prefixes are:  
+ State\SSL | With SSL | Without SSL  
+ --- | --- | ---  
+ Debug | `http://localhost` | `https://localhost`  
+ Production | `http://*.yourdomain.ext` | `https://*.yourdomain.ext` 
+
 ### State Routing (`JWS.Listener.[StateName].Routing`)
 This setting determines the routing policy and has two possible options. This setting applies to both the `JWS.Routing` part and the `JWS.Server.Root` part.  
  - `stay`: when routing (re-routing), the corresponding page is sent as if it were at the URL's name,  
- - `302`: the response contains a `Location: [re-routed page]` header and has the `HTTP 302 Found` status code. In this case, the browser will do a second request to the re-routed page.  
-
-Recommended settings for prefixes are:  
-State\SSL | With SSL | Without SSL  
---- | --- | ---  
-Debug | `http://localhost` | `https://localhost`  
-Production | `http://*.yourdomain.ext` | `https://*.yourdomain.ext`  
+ - `302`: the response contains a `Location: [re-routed page]` header and has the `HTTP 302 Found` status code. In this case, the browser will do a second request to the re-routed page.   
 
 ## Defining Your Own States
 All states are defined like this (always in `JWS.Listener`):
@@ -117,4 +117,5 @@ Variable | Extrapolated to
 `@MOD` | The module throwing the message (padded to `JWS.Logging.Formatting.MaxMod` characters)  
 `@TIME` | The date and time on which the message was logged, formatted as described using `JWS.Logging.Formatting.DTFormatting`  
 `@MSG` | The actual message  
+
 Each formatted message is (if the `JWS.Logging.Formatting.Color` is `on`) prepended with `\u001b[` plus corresponding color code and appended with `\u001b[0m` (for coloration). This cannot be changed (i.e. you cannot have only the metadata be colored, ...).
