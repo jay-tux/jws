@@ -88,6 +88,29 @@ namespace Jay.Ext
         }
 
         /// <summary>
+        /// Enumerates an array Python-style (with element and index).
+        /// </summary>
+        /// <param name="toEnum">The array to enumerate</param>
+        /// <param name="consumer">The method to execute for each (item, index) pair</param>
+        /// <typeparam name="T">The type contained in the list</typeparam>
+        public static void Enumerate<T>(this T[] toEnum, Action<T, int> consumer)
+        {
+            for(int i = 0; i < toEnum.Length; i++) consumer(toEnum[i], i);
+        }
+
+        /// <summary>
+        /// Pops the first element of the List.
+        /// </summary>
+        /// <param name="lst">The List to pop from</param>
+        /// <returns>The popped item</returns>
+        public static T Pop<T>(this List<T> lst)
+        {
+            T item = lst[0];
+            lst.RemoveAt(0);
+            return item;
+        }
+
+        /// <summary>
         /// Double-cyclic enumerates two lists, resulting in a third list.
         /// Each item of the first list is matched with the item from the second list at position [index % length],
         /// where index is the index of the item in the first list and length is the length of the second list.

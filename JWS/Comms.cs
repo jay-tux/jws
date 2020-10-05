@@ -87,13 +87,16 @@ namespace Jay.Web.Server
                 }
                 catch(IOException)
                 {
-                    StaticLogger.LogWarning("_resolver", $"Tried to load existing error file {Listener.ErrorDir}/{code}.html, but couldn't read it. Returning generic error file.");
+                    Program.Logger.LogFormatted("_resolver",
+                        $"Tried to load existing error file {Listener.ErrorDir}/{code}.html, but couldn't read it. Returning generic error file.", LogSeverity.Warning);
+                    //StaticLogger.LogWarning("_resolver", $"Tried to load existing error file {Listener.ErrorDir}/{code}.html, but couldn't read it. Returning generic error file.");
                     return fallback;
                 }
             }
             else
             {
-                StaticLogger.LogWarning("_resolver", $"Tried to load non-existent error file {Listener.ErrorDir}/{code}.html. Returning generic error file.");
+                Program.Logger.LogFormatted("_resolver", $"Tried to load non-existent error file {Listener.ErrorDir}/{code}.html. Returning generic error file.", LogSeverity.Warning);
+                //StaticLogger.LogWarning("_resolver", $"Tried to load non-existent error file {Listener.ErrorDir}/{code}.html. Returning generic error file.");
                 return fallback;
             }
         }
@@ -106,7 +109,8 @@ namespace Jay.Web.Server
                 string state = Listener.ListenerState;
                 if(rt is string route)
                 {
-                    StaticLogger.LogDebug("_resolver", $"Route JWS.Routing.{_target} resolved to {route}");
+                    Program.Logger.LogFormatted("_resolver", $"Route JWS.Routing.{_target} resolved to {route}", LogSeverity.Debug);
+                    //StaticLogger.LogDebug("_resolver", $"Route JWS.Routing.{_target} resolved to {route}");
                     _target = route;
                     try
                     {
@@ -120,22 +124,27 @@ namespace Jay.Web.Server
                                 Buffer = new byte[0];
                                 _finished = true;
                             }
-                            else if(choice != "stay") StaticLogger.LogWarning("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " +
-                                "Valid options are 302 and stay. Using fallback stay.");
+                            else if(choice != "stay") Program.Logger.LogFormatted("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " +
+                                "Valid options are 302 and stay. Using fallback stay.", LogSeverity.Warning);
+                            //StaticLogger.LogWarning("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " + "Valid options are 302 and stay. Using fallback stay.");
                         }
                         else
                         {
-                            StaticLogger.LogWarning("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.");
+                            Program.Logger.LogFormatted("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.", LogSeverity.Warning);
+                            //StaticLogger.LogWarning("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.");
                         }
                     }
                     catch(ArgumentException)
                     {
-                        StaticLogger.LogWarning("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.");
+                        Program.Logger.LogFormatted("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.",
+                            LogSeverity.Warning);
+                        //StaticLogger.LogWarning("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.");
                     }
                 }
                 else
                 {
-                    StaticLogger.LogWarning("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...");
+                    Program.Logger.LogFormatted("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...", LogSeverity.Warning);
+                    //StaticLogger.LogWarning("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...");
                 }
             }
             catch(ArgumentException) {}
@@ -145,7 +154,8 @@ namespace Jay.Web.Server
         {
             if(_target == "/")
             {
-                StaticLogger.LogDebug("_resolver", "Client requested server root (/). Attempting to resolve...");
+                Program.Logger.LogFormatted("_resolver", "Client requested server root (/). Attempting to resolve...", LogSeverity.Debug);
+                //StaticLogger.LogDebug("_resolver", "Client requested server root (/). Attempting to resolve...");
                 try
                 {
                     object rt = Program.Settings["JWS.Server.Root"];
@@ -155,13 +165,15 @@ namespace Jay.Web.Server
                     }
                     else
                     {
-                        StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.");
+                        Program.Logger.LogFormatted("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.", LogSeverity.Warning);
+                        //StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.");
                         _target = "/index.html";
                     }
                 }
                 catch(ArgumentException)
                 {
-                    StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.");
+                    Program.Logger.LogFormatted("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.", LogSeverity.Warning);
+                    //StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.");
                     _target = "/index.html";
                 }
             }
@@ -177,8 +189,10 @@ namespace Jay.Web.Server
                 }
                 catch(IOException)
                 {
-                    StaticLogger.LogWarning("_resolver", $"Client requested {_target}; which resolved to existing file {Listener.HTMLDir + _target}, but couldn't be read." +
-                        " Returning 403.");
+                    Program.Logger.LogFormatted("_resolver", $"Client requested {_target}; which resolved to existing file {Listener.HTMLDir + _target}, but couldn't be read." +
+                        " Returning 403.", LogSeverity.Warning);
+                    //StaticLogger.LogWarning("_resolver", $"Client requested {_target}; which resolved to existing file {Listener.HTMLDir + _target}, but couldn't be read." +
+                    //    " Returning 403.");
                     StatusCode = 403;
                     Buffer = Encoding.UTF8.GetBytes(LoadError(StatusCode));
                     _error = true;
@@ -186,7 +200,9 @@ namespace Jay.Web.Server
             }
             else
             {
-                StaticLogger.LogMessage("_resolver", $"Client requested {_target}; which resolved to non-existent file {Listener.HTMLDir + _target}. Returning 404.");
+                Program.Logger.LogFormatted("_resolver", $"Client requested {_target}; which resolved to non-existent file {Listener.HTMLDir + _target}. Returning 404.",
+                    LogSeverity.Message);
+                //StaticLogger.LogMessage("_resolver", $"Client requested {_target}; which resolved to non-existent file {Listener.HTMLDir + _target}. Returning 404.");
                 StatusCode = 404;
                 Buffer = Encoding.UTF8.GetBytes(LoadError(404));
                 _error = true;
@@ -204,12 +220,16 @@ namespace Jay.Web.Server
                     }
                     else
                     {
-                        StaticLogger.LogWarning("_resolver", $"File associations should be strings; not the case for JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
+                        Program.Logger.LogFormatted("_resolver", $"File associations should be strings; not the case for JWS.Server.FileAssoc.{ext}. Using fallback text/html.",
+                            LogSeverity.Warning);
+                        //StaticLogger.LogWarning("_resolver", $"File associations should be strings; not the case for JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
                     }
                 }
                 catch(ArgumentException)
                 {
-                    StaticLogger.LogWarning("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
+                    Program.Logger.LogFormatted("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.",
+                        LogSeverity.Warning);
+                    //StaticLogger.LogWarning("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
                 }
             }
         }
@@ -255,13 +275,15 @@ namespace Jay.Web.Server
                 }
                 else
                 {
-                    StaticLogger.LogWarning(this, $"Status description for {StatusCode} should be string.");
+                    Program.Logger.LogFormatted("Comms", $"Status description for {StatusCode} should be string.", LogSeverity.Warning);
+                    //StaticLogger.LogWarning(this, $"Status description for {StatusCode} should be string.");
                     resp.StatusDescription = "-- unknown status --";
                 }
             }
             catch(ArgumentException)
             {
-                StaticLogger.LogWarning(this, $"Status description for {StatusCode} (JWS.Statusses.{StatusCode}) is undefined.");
+                Program.Logger.LogFormatted("Coms", $"Status description for {StatusCode} (JWS.Statusses.{StatusCode}) is undefined.", LogSeverity.Warning);
+                //StaticLogger.LogWarning(this, $"Status description for {StatusCode} (JWS.Statusses.{StatusCode}) is undefined.");
                 resp.StatusDescription = "-- unknown status --";
             }
 
