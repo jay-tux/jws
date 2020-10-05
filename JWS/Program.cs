@@ -47,6 +47,7 @@ namespace Jay.Web.Server
         {
             LogBuffer = new List<(string, LogSeverity, DateTime)>();
             Instance = this;
+            Console.CancelKeyPress += (o, e) => Exit(-1);
             Log($"Starting server at {DateTime.Now.ToString()}.", LogSeverity.Message);
 
             Log("Loading Settings...", LogSeverity.Message);
