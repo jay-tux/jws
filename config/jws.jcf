@@ -52,7 +52,7 @@ JWS: {
     Boot: {
         Commands: []
     }
-    : initialisation for the listener, should contain State and a block defining the State. Such blocks
+    : initialization for the listener, should contain State and a block defining the State. Such blocks
     : should contain Port (int), Routing and Prefixes
     : Routing should be stay (send the re-routed page) or 302 (change url)
     Listener: {
@@ -151,5 +151,66 @@ JWS: {
     Routing: {
         /home: /home.html
         /home/main: /main.html
+    }
+    : logger settings, too complicated to explain here.
+    Logging: {
+        Type: Channel
+        Formatting: {
+            Color: on
+            MaxType: 10
+            MaxMod: 9
+            Colors: {
+                Debug: 36m
+                Message: 37m
+                Warning: 33m
+                Error: 31m
+            }
+            DTFormatting: yyyy-MM-dd HH:mm:ss.ffffff tt
+            Formatting: (@TYPE in @MOD at @TIME): @MSG
+        }
+        Debug: {
+            State: off
+            Stream: [
+                {
+                    Value: stdout
+                }
+                {
+                    Value: /debug.log
+                }
+            ]
+        }
+        Message: {
+            State: on
+            Stream: [
+                {
+                    Value: stdout
+                }
+                {
+                    Value: /message.log
+                }
+            ]
+        }
+        Warning: {
+            State: on
+            Stream: [
+                {
+                    Value: stderr
+                }
+                {
+                    Value: /warning.log
+                }
+            ]
+        }
+        Error: {
+            State: on
+            Stream: [
+                {
+                    Value: stderr
+                }
+                {
+                    Value: /error.log
+                }
+            ]
+        }
     }
 }
