@@ -3,7 +3,7 @@ JWS: {
     Paths: {
         HTML: @Home/.config/jws/html
         Error: @Home/.config/jws/error
-        Template: @Home/.config/jws/template
+        Template: @Home/.config/jws/html/template
     }
     : contains some server settings (should contain Root (reroute for / url), Name and FileAssoc (MIME associations; a block))
     Server: {
@@ -221,5 +221,6 @@ JWS: {
         Assoc: text/jwstemplate
         Data: text/jwsdata
         Prefix: ~
+        Indexing: ::
     }
 }

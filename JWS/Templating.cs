@@ -14,6 +14,7 @@ namespace Jay.Web.Server
         public static string MIMEData;
         public static string TemplatePrefix;
         public static string TemplateDir;
+        public static string Indexing;
 
         public static void Load()
         {
@@ -162,6 +163,26 @@ namespace Jay.Web.Server
                 Program.Logger.LogFormatted("_hook_template", "Prefix not defined (JWS.Templates.Prefix). Using fallback $.", LogSeverity.Warning);
             }
 
+            try
+            {
+                object i = Program.Settings["JWS.Templates.Indexing"];
+                if(i is string index)
+                {
+                    Indexing = index;
+                    Program.Logger.LogFormatted("_hook_template", $"Set indexing operator to {index}.", LogSeverity.Debug);
+                }
+                else
+                {
+                    Indexing = "::";
+                    Program.Logger.LogFormatted("_hook_template", "Indexing operator should be a string (JWS.Templates.Indexing). Using fallback ::.", LogSeverity.Warning);
+                }
+            }
+            catch(ArgumentException)
+            {
+                Indexing = "::";
+                Program.Logger.LogFormatted("_hook_template", "Indexing operator not defined (JWS.Templates.Indexing). Using fallback ::.", LogSeverity.Warning);
+            }
+
             Program.Logger.LogFormatted("_hook_template", "Attempting to hook into Comms (2 hooks).", LogSeverity.Debug);
             Response.Hook(
                 ((req, resp) => resp.MIMEType == MIMETemplate),
@@ -188,6 +209,10 @@ namespace Jay.Web.Server
                 [$"{TemplatePrefix}server"] = Listener.ServerName,
                 [$"{TemplatePrefix}page"] = got.Path
             };
+            vars[$"{TemplatePrefix}AllGET"] = string.Join("<br />\n", got.Queries.Select((k, v) => $"{k} = {v}"));
+            got.Queries.ForEach((key, value) => {
+                vars[$"{TemplatePrefix}GET{Indexing}{key}"] = value;
+            });
             send.Content.Split('\n').ForEach(line => {
                 if(line.Contains('='))
                 {
