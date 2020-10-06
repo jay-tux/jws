@@ -71,6 +71,7 @@ namespace Jay.Web.Server
         public WebHeaderCollection Headers;
         public int StatusCode;
         public byte[] Buffer;
+        public string Content { get => Encoding.UTF8.GetString(Buffer); set => Buffer = Encoding.UTF8.GetBytes(value); }
         private static List<(Func<Request, Response, bool>, Action<Request, Response>)> _hooks =
             new List<(Func<Request, Response, bool>, Action<Request, Response>)>();
 

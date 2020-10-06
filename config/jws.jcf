@@ -171,7 +171,7 @@ JWS: {
             Formatting: (@TYPE in @MOD at @TIME): @MSG
         }
         Debug: {
-            State: off
+            State: on
             Stream: [
                 {
                     Value: stdout
@@ -217,8 +217,9 @@ JWS: {
     }
     : enable or disable templates
     Templates: {
-        State: off
+        State: on
         Assoc: text/jwstemplate
         Data: text/jwsdata
+        Prefix: ~
     }
 }

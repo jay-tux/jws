@@ -118,7 +118,7 @@ namespace Jay.Config
             }
             catch(Exception)
             {
-                if(Parent != null) { return Parent.Lookup(todo); }//(string)Parent[todo]; }
+                if(Parent != null) { return Parent.Lookup(todo); }
                 throw new NullReferenceException("Can't find " + todo);
             }
         }
