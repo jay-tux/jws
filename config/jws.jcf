@@ -1,8 +1,9 @@
 JWS: {
-    : contains paths (should contain HTML and Error)
+    : contains paths (should contain HTML, Error and Template)
     Paths: {
         HTML: @Home/.config/jws/html
         Error: @Home/.config/jws/error
+        Template: @Home/.config/jws/template
     }
     : contains some server settings (should contain Root (reroute for / url), Name and FileAssoc (MIME associations; a block))
     Server: {
@@ -10,6 +11,8 @@ JWS: {
         Name: _jws_example
         FileAssoc: {
             : some frequently used ones, subset of https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+            : to mark a file type as template (not to be served directly), set it to <extension>: $JWS.Templates.Assoc$
+            : to mark a file type as data to fill a template with, set it to <extension>: $JWS.Templates.Data$
             aac: audio/aac
             bin: application/octet-stream
             bmp: image/bmp
@@ -46,6 +49,10 @@ JWS: {
             xhtml: application/xhtml+xml
             xml: application/xml
             zip: application/zip
+
+            :template types
+            jtmp: $JWS.Templates.Assoc$
+            jtfl: $JWS.Templates.Data$
         }
     }
     : for startup commands, should contain Commands (a list)
@@ -142,11 +149,6 @@ JWS: {
         510: Not Extended
         511: Network Authentication Required
     }
-    : currently unused.
-    Services: {
-        Internals: {}
-        Externals: []
-    }
     : for re-routing urls.
     Routing: {
         /home: /home.html
@@ -158,7 +160,7 @@ JWS: {
         Formatting: {
             Color: on
             MaxType: 10
-            MaxMod: 9
+            MaxMod: 12
             Colors: {
                 Debug: 36m
                 Message: 37m
@@ -212,5 +214,11 @@ JWS: {
                 }
             ]
         }
+    }
+    : enable or disable templates
+    Templates: {
+        State: off
+        Assoc: text/jwstemplate
+        Data: text/jwsdata
     }
 }

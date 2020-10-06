@@ -71,10 +71,15 @@ namespace Jay.Web.Server
         public WebHeaderCollection Headers;
         public int StatusCode;
         public byte[] Buffer;
+        private static List<(Func<Request, Response, bool>, Action<Request, Response>)> _hooks =
+            new List<(Func<Request, Response, bool>, Action<Request, Response>)>();
 
         private Response() {}
 
-        private string LoadError(int code)
+        public static void Hook(Func<Request, Response, bool> filter, Action<Request, Response> consumer)
+            => _hooks.Add((filter, consumer));
+
+        public string LoadError(int code)
         {
             string fallback = "<html><head><meta charset=\"utf-8\" /><title>" + Listener.ServerName + " - HTTP " + code.ToString() + "</title></head>"
                 + "<body>The server has run into an HTTP " + code.ToString() + " status.</body>";
@@ -252,6 +257,9 @@ namespace Jay.Web.Server
             resp.AttemptRootRoute();
             if(!resp._finished) resp.AttemptRoute();
             if(!resp._finished) resp.AttemptLiteral();
+            _hooks.ForEach(hook => {
+                if(hook.Item1(r, resp)) hook.Item2(r, resp);
+            });
             resp.ContentLength = resp.Buffer.Length;
 
             return resp;

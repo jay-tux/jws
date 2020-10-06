@@ -61,6 +61,10 @@ namespace Jay.Web.Server
             });
             Log("Settings succesfully loaded.", LogSeverity.Message);
 
+            Log($"Starting hooks...", LogSeverity.Message);
+            Hooks();
+            Log($"Hooks are ready!", LogSeverity.Message);
+
             Log($"Starting Listener loop...", LogSeverity.Message);
             Listener server = new Listener();
             foreach(var v in server.Loop()) {}
@@ -436,6 +440,11 @@ namespace Jay.Web.Server
             {
                 return Environment.ExpandEnvironmentVariables("%APPDATA%");
             }
+        }
+
+        private void Hooks()
+        {
+            Templating.Load();
         }
 
         public void Exit(int code)
