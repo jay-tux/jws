@@ -3,6 +3,7 @@ using System.Net;
 using System.Linq;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace Jay.Ext
 {
@@ -357,6 +358,13 @@ namespace Jay.Ext
             }
         }
 
+        /// <summary>
+        /// Checks if both arrays are equal, i.e. they contain the same elements in the same order.
+        /// </summary>
+        /// <param name="src">The array to compare</param>
+        /// <param name="other">The array to compare to</param>
+        /// <typeparam name="T">The type contained in the arrays</typeparam>
+        /// <returns>True if both arrays are equal, otherwise false</returns>
         public static bool ArrEq<T>(this T[] src, T[] other)
         {
             if(src.Length != other.Length) return false;
@@ -364,6 +372,28 @@ namespace Jay.Ext
                 if(!src[i].Equals(other[i])) return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Executes an action for each pair in a given NameValueCollection.
+        /// </summary>
+        /// <param name="toEnum">The NameValueCollection to enumerate</param>
+        /// <param name="consumer">The Action to execute</param>
+        public static void ForEach(this NameValueCollection toEnum, Action<string, string> consumer)
+        {
+            foreach(string key in toEnum) consumer(key, toEnum[key]);
+        }
+
+        /// <summary>
+        /// Maps each key-value pair in this NameValueCollection to another element.
+        /// </summary>
+        /// <param name="toEnum">The NameValueCollection to map</param>
+        /// <param name="func">The function to apply to each pair</param>
+        /// <typeparam name="T">The type of the resulting collection</param>
+        /// <returns>An IEnumerable containing all mapped values</returns>
+        public static IEnumerable<T> Select<T>(this NameValueCollection toEnum, Func<string, string, T> func)
+        {
+            foreach(string key in toEnum) yield return func(key, toEnum[key]);
         }
     }
 }
