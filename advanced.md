@@ -36,6 +36,7 @@
        - `JWS.Logging.Formatting.DTFormatting`: the C# DateTime formatting string to use.  
        - `JWS.Logging.Formatting.Formatting`: the format string for all messages.  
    All other blocks in the `JWS.Logging` block are used to define Channel logger behavior.  
+   - `JWS.Templates`: this block contains all settings regarding templates; for a description, see [JWS Templates](../../blob/master/templates.md).  
 
 ### `JWS.Paths.HTML` and `JWS.Paths.Error`
 There are two constants you can use in these variables: `@Home` for the home directory and `@Data` for the data directory (`/usr/local/etc/jws` on *nix and `%APPDATA%/jws` on Windows).  
@@ -51,7 +52,7 @@ Prefixes are of the form `protocol://domain`, where `protocol` can be any of `ht
  State\SSL | With SSL | Without SSL  
  --- | --- | ---  
  Debug | `http://localhost` | `https://localhost`  
- Production | `http://*.yourdomain.ext` | `https://*.yourdomain.ext` 
+ Production | `http://*.yourdomain.ext` | `https://*.yourdomain.ext`
 
 ### State Routing (`JWS.Listener.[StateName].Routing`)
 This setting determines the routing policy and has two possible options. This setting applies to both the `JWS.Routing` part and the `JWS.Server.Root` part.  

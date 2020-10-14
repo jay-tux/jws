@@ -19,6 +19,7 @@ However, running JWS like this will cause a crash with the error message
 There are two locations where JWS will look for the configuration file: `$HOME/.config/jws/jws.jcf` (or a similar location, depending on OS versions.) and
 `/usr/local/etc/jws/jws.jcf` (or `%APPDATA/jws/jws.jcf` on Windows), so I recommend copying the default config file (`config/jws.jcf`) to one of those locations.  
 *This is the easy configuration guide, for a more in-depth guide, see [In-depth Configuration](../../blob/master/advanced.md)*  
+*For the guide on templating, see [JWS Templates](../../blob/master/templates.md)*  
 
 ### Some Configuration variables
 *If the config file looks like gibberish to you, take a look at [Reading the Configuration File](../../blob/master/jcf.md)*  
