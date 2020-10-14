@@ -210,8 +210,12 @@ namespace Jay.Web.Server
                 [$"{TemplatePrefix}page"] = got.Path
             };
             vars[$"{TemplatePrefix}AllGET"] = string.Join("<br />\n", got.Queries.Select((k, v) => $"{k} = {v}"));
+            vars[$"{TemplatePrefix}AllPOST"] = string.Join("<br />\n", got.POST.Select(kvp => $"{kvp.Key} = {kvp.Value}"));
             got.Queries.ForEach((key, value) => {
                 vars[$"{TemplatePrefix}GET{Indexing}{key}"] = value;
+            });
+            got.POST.ForEach(kvp => {
+                vars[$"{TemplatePrefix}POST{Indexing}{kvp.Key}"] = kvp.Value;
             });
             send.Content.Split('\n').ForEach(line => {
                 if(line.Contains('='))

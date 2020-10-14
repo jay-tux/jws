@@ -20,6 +20,7 @@ namespace Jay.Web.Server
         public string Path;
         public NameValueCollection Queries;
         public string Content;
+        public Dictionary<string, string> POST;
 
         public Request(HttpListenerRequest r)
         {
@@ -32,6 +33,17 @@ namespace Jay.Web.Server
             Path = string.Join("", r.Url.Segments);
             Queries = r.QueryString;
             Content = (r.HasEntityBody) ? new StreamReader(r.InputStream, ContentEncoding).ReadToEnd() : "";
+            Program.Logger.LogFormatted("_request", $"Request content is: \n{Content}", LogSeverity.Debug);
+            ParsePost(Content);
+        }
+
+        private void ParsePost(string cnt)
+        {
+            POST = new Dictionary<string, string>();
+            Array.ForEach(cnt.Split('&'), entry => {
+                if(entry.Contains('=')) POST[entry.Split('=')[0]] = entry.Split('=')[1];
+                else POST[entry] = "";
+            });
         }
 
         public override string ToString()
