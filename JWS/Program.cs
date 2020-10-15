@@ -4,6 +4,7 @@ using System.IO;
 using Jay.Config;
 using System.Collections.Generic;
 using Jay.Ext;
+using System.Linq;
 
 namespace Jay.Web.Server
 {
@@ -29,10 +30,11 @@ namespace Jay.Web.Server
         public static Program Instance;
         public event EventHandler OnExit;
         private List<(string, LogSeverity, DateTime)> LogBuffer;
+        private bool Overridden;
 
         public static void Main(string[] args)
         {
-            new Program();
+            new Program(args);
         }
 
         private void Log(string message, LogSeverity severity)
@@ -43,22 +45,56 @@ namespace Jay.Web.Server
                 Logger.LogFormatted("_driver", message, severity);
         }
 
-        private Program()
+        private Program(string[] args)
         {
             LogBuffer = new List<(string, LogSeverity, DateTime)>();
+            Log("Loading Override CLI arguments...", LogSeverity.Debug);
+            Dictionary<string, string> over = Overrides(args);
             Instance = this;
             Console.CancelKeyPress += (o, e) => Exit(-1);
             Log($"Starting server at {DateTime.Now.ToString()}.", LogSeverity.Message);
 
             Log("Loading Settings...", LogSeverity.Message);
-            string[] locs = new string[] {
-                GetHome() + "/.config/jws/jws.jcf", Data() + "/jws/jws.jcf"
-            };
-            int loc = LoadSettings(locs);
-            OnExit += ((o, e) => {
-                Log($"Attempting to save config file to {locs[loc]} (index {loc}).", LogSeverity.Message);
-                _settings.Save(locs[loc]);
-            });
+            string[] locs = new string[0];
+            int loc = -1;
+
+            if(over.ContainsKey("config")) {
+                locs = new string[] { over["config"] };
+                loc = LoadSettings(locs);
+            }
+            else if(!over.ContainsKey("noconfig")) {
+                locs = new string[] {
+                    GetHome() + "/.config/jws/jws.jcf", Data() + "/jws/jws.jcf"
+                };
+                loc = LoadSettings(locs);
+            }
+            else {
+                _settings = new Jcf();
+                Overridden = true;
+            }
+
+            if(over.ContainsKey("cwd"))
+            {
+                string cwd = Environment.CurrentDirectory;
+                Settings.Override("JWS.Paths.HTML", cwd + "/html");
+                Settings.Override("JWS.Paths.Error", cwd + "/error");
+                Settings.Override("JWS.Paths.Template", cwd + "/template");
+            }
+
+            if(over.ContainsKey("state")) Settings.Override("JWS.Listener.State", over["state"]);
+            if(over.ContainsKey("html")) Settings.Override("JWS.Paths.HTML", over["html"]);
+            if(over.ContainsKey("error")) Settings.Override("JWS.Paths.Error", over["error"]);
+            if(over.ContainsKey("template")) Settings.Override("JWS.Paths.Template", over["template"]);
+            if(over.ContainsKey("name")) Settings.Override("JWS.Server.Name", over["name"]);
+            if(over.ContainsKey("port")) Settings.Override($"JWS.Listener.{Settings["JWS.Listener.State"]}.Port", over["port"]);
+
+
+            if(!Overridden) {
+                OnExit += ((o, e) => {
+                    Log($"Attempting to save config file to {locs[loc]} (index {loc}).", LogSeverity.Message);
+                    _settings.Save(locs[loc]);
+                });
+            }
             Log("Settings succesfully loaded.", LogSeverity.Message);
 
             Log($"Starting hooks...", LogSeverity.Message);
@@ -71,6 +107,65 @@ namespace Jay.Web.Server
 
             Log($"Server shut down at {DateTime.Now.ToString()}.", LogSeverity.Message);
             Exit(0);
+        }
+
+        private Dictionary<string, string> Overrides(string[] args)
+        {
+            Dictionary<string, string> cli = new Dictionary<string, string>();
+            string[] expect = new string[] {
+                "--config", "--port", "--state", "--html", "--error", "--template", "--name"
+            };
+            string[] single = new string [] {
+                "--help", "--cwd", "--noconfig"
+            };
+
+            for(int i = 0; i < args.Length; i++)
+            {
+                if(expect.Contains(args[i]))
+                {
+                    if(i == args.Length - 1 || args[i + 1].StartsWith("--"))
+                    {
+                        Log($"CLI Argument {i}: {args[i]} expects an argument, none given. Ignoring...", LogSeverity.Warning);
+                    }
+                    else
+                    {
+                        cli[args[i].Substring(2)] = args[++i];
+                        Log($"Parsed CLI Argument {i - 1}: {args[i - 1]} got set to {args[i]}", LogSeverity.Debug);
+                    }
+                }
+                else if(single.Contains(args[i]))
+                {
+                    if(args[i] == "--help") PrintHelp();
+                    cli[args[i].Substring(2)] = "";
+                    Log($"Added option #{i} ({args[i]}) to the liste of options.", LogSeverity.Debug);
+                }
+                else
+                {
+                    Log($"Argument {i}: unknown. Ignoring...", LogSeverity.Warning);
+                }
+            }
+            return cli;
+        }
+
+        private void PrintHelp()
+        {
+            Console.WriteLine("                                         === JWS:  Jay's  Web  Server ===                                          ");
+            Console.WriteLine("JWS is a simple, configurable and extendable web server designed for ease of use.");
+            Console.WriteLine("For an in-depth reference, see https://github.com/jay-tux/jws.");
+            Console.WriteLine("    --- Arguments --- ");
+            Console.WriteLine(" --config <config file>; starts with the given config file, skips scanning of other config files.");
+            Console.WriteLine(" --port <port no>; starts JWS on the given port, instead of the port defined in the config file.");
+            Console.WriteLine(" --state <statename>; uses <statename>, overriding the JWS.Server.State settings.");
+            Console.WriteLine(" --html <html>; uses <html> as the HTML source directory.");
+            Console.WriteLine(" --error <error>; uses <error> as the directory containing error messages.");
+            Console.WriteLine(" --template <template>; uses <template> as the templates directory.");
+            Console.WriteLine(" --name <name>; changes the server's name (overriding the settings file).");
+            Console.WriteLine("");
+            Console.WriteLine("    ---  Toggles  --- ");
+            Console.WriteLine(" --help; displays this help message and exits.");
+            Console.WriteLine(" --cwd; uses the current directory as root (expects html/, error/ and template/ directories; unless specified).");
+            Console.WriteLine(" --noconfig; skips config loading and uses default settings (will crash if the required directories are not given).");
+            Environment.Exit(0);
         }
 
         private int LoadSettings(string[] locations)
