@@ -35,3 +35,19 @@ For the `JWS.Paths.HTML` and `JWS.Paths.Error`, there are two constants:
  - `@Data` for the data directory (`/usr/local/etc/jws` on *nix and `%APPDATA%/jws` on Windows)  
 
 For `JWS.Paths.Error`: whenever an error occurs (with status code `code`), the file `[JWS.Paths.Error]/[code].html` is searched for.
+
+### Overriding Settings
+You can use command-line arguments to override the settings or even the setting file loading:  
+**Arguments:**  
+ - `--config <configuration file>`: points the config loader to `<configuration file>` instead of the default locations,  
+ - `--port <port no>`: uses `<port no>` rather than `JWS.Listener.<State>.Port`,  
+ - `--state <state>`: uses `<state>` rather than `JWS.Listener.State`,  
+ - `--html <directory>`: uses `<directory>` rather than `JWS.Paths.HTML`,  
+ - `--error <directory>`: uses `<directory>` rather than `JWS.Paths.Error`,  
+ - `--template <directory>`: uses `<directory>` rather than `JWS.Paths.Template`, and  
+ - `--name <name>`: uses `<name>` rather than `JWS.Server.Name`.  
+
+**Toggles:**
+ - `--help`: displays a help message and exits,  
+ - `--cwd`: uses `$PWD/html`, `$PWD/error` and `$PWD/template` as `JWS.Paths.HTML`, `JWS.Paths.Error` and `JWS.Paths.Template` respectively, and  
+ - `--noconfig`: uses the fallback settings everywhere. Do not use this option as several things might break if you don't use the other arguments as well.
