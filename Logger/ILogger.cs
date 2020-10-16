@@ -50,12 +50,26 @@ namespace Jay.IO.Logging
 
         public static void LogFormatted(this ILogger logger, string source, string message, LogSeverity severity, DateTime tm)
         {
-            logger.Log(FormatString(source, message.Replace("@TIME", tm.ToString(DateTimeFmt)), severity), severity);
+            if(logger is SimpleLogger)
+            {
+                Console.WriteLine(FormatString(source, message.Replace("@TIME", tm.ToString(DateTimeFmt)), severity));
+            }
+            else
+            {
+                logger.Log(FormatString(source, message.Replace("@TIME", tm.ToString(DateTimeFmt)), severity), severity);
+            }
         }
 
         public static void LogFormatted(this ILogger logger, string source, string message, LogSeverity severity)
         {
-            logger.Log(FormatString(source, message, severity), severity);
+            if(logger is SimpleLogger)
+            {
+                Console.WriteLine(FormatString(source, message, severity));
+            }
+            else
+            {
+                logger.Log(FormatString(source, message, severity), severity);
+            }
         }
     }
 
