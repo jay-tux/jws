@@ -39,8 +39,9 @@ namespace Jay.Web.Server
 
         private void Log(string message, LogSeverity severity)
         {
-            if(Logger == null)
+            if(Logger == null) {
                 LogBuffer.Add((message, severity, DateTime.Now));
+            }
             else
                 Logger.LogFormatted("_driver", message, severity);
         }
@@ -70,6 +71,7 @@ namespace Jay.Web.Server
             }
             else {
                 _settings = new Jcf();
+                Logger = SimpleLogger.Instance;
                 Overridden = true;
             }
 
