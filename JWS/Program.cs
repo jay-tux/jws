@@ -89,7 +89,13 @@ namespace Jay.Web.Server
             if(over.ContainsKey("template")) Settings.Override("JWS.Paths.Template", over["template"]);
             if(over.ContainsKey("name")) Settings.Override("JWS.Server.Name", over["name"]);
             if(over.ContainsKey("port")) Settings.Override($"JWS.Listener.{Settings["JWS.Listener.State"]}.Port", over["port"]);
-
+            over.ForEach(kvp => {
+                if(kvp.Key.StartsWith("JWS."))
+                {
+                    Settings.Override(kvp.Key, kvp.Value);
+                    Log($"Overridden {kvp.Key} to be {kvp.Value}.", LogSeverity.Debug);
+                }
+            });
 
             if(!Overridden) {
                 OnExit += ((o, e) => {
@@ -140,6 +146,17 @@ namespace Jay.Web.Server
                     if(args[i] == "--help") PrintHelp();
                     cli[args[i].Substring(2)] = "";
                     Log($"Added option #{i} ({args[i]}) to the liste of options.", LogSeverity.Debug);
+                }
+                else if(args[i].StartsWith("--JWS"))
+                {
+                    if(i == args.Length - 1 || args[i + 1].StartsWith("--"))
+                    {
+                        Log($"CLI Argument {i}: {args[i]} expects an argument, none given. Ignoring...", LogSeverity.Warning);
+                    }
+                    else
+                    {
+                        cli[args[i].Substring(2)] = args[i + 1];
+                    }
                 }
                 else
                 {
