@@ -51,3 +51,5 @@ You can use command-line arguments to override the settings or even the setting 
  - `--help`: displays a help message and exits,  
  - `--cwd`: uses `$PWD/html`, `$PWD/error` and `$PWD/template` as `JWS.Paths.HTML`, `JWS.Paths.Error` and `JWS.Paths.Template` respectively, and  
  - `--noconfig`: uses the fallback settings everywhere. Do not use this option as several things might break if you don't use the other arguments as well.
+
+Alternatively, you can override any setting by using `--<setting path> <setting>`.
