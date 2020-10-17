@@ -223,4 +223,8 @@ JWS: {
         Prefix: ~
         Indexing: ::
     }
+    ControlPanel: {
+        State: on
+        URL: /cpanel/
+    }
 }
