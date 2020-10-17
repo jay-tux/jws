@@ -28,6 +28,11 @@ namespace Jay.Web.Server
                     return;
                 }
             }
+            catch(ArgumentException)
+            {
+                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.State is not defined. Assuming 'off'.", LogSeverity.Warning);
+                return;
+            }
         }
     }
 }
