@@ -445,6 +445,7 @@ namespace Jay.Web.Server
         private void Hooks()
         {
             Templating.Load();
+            ControlPanel.Load();
         }
 
         public void Exit(int code)
