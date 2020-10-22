@@ -186,21 +186,29 @@ namespace Jay.Config
 
         public IEnumerable<string> MapToString(string surroundSub, string surroundList, Func<string, string, string> mapper)
             => MapToString((s => surroundSub, surroundSub), (s => surroundList, surroundList), mapper);
+        public IEnumerable<string> MapToString(string surroundSub, string surroundList, Func<string, string, string> mapper, bool fullPath)
+            => MapToString((s => surroundSub, surroundSub), (s => surroundList, surroundList), mapper, fullPath);
+        public IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList, Func<string, string, string> mapper)
+            => MapToString(surroundSub, surroundList, mapper, false);
         public IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList,
-            Func<string, string, string> mapper)
+            Func<string, string, string> mapper, bool fullPath) => MapToString(surroundSub, surroundList, mapper, fullPath, "");
+        private IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList,
+            Func<string, string, string> mapper, bool fullPath, string prefix)
         {
-            foreach(var kvp in _values) { yield return mapper(kvp.Key, kvp.Value); }
+            string p = fullPath ? (prefix == "" ? "" : $"{prefix}.") : "";
+            foreach(var kvp in _values) { yield return mapper(fullPath ? $"{p}{kvp.Key}" : kvp.Key, kvp.Value); }
             foreach(var kvp in _lists) {
-                yield return surroundList.Item1(kvp.Key);
-                foreach(Jcf vl in kvp.Value)
+                yield return surroundList.Item1($"<br />{p}{kvp.Key}");
+                for(int i = 0; i < kvp.Value.Count; i++)
                 {
-                    foreach(string v in vl.MapToString(surroundSub, surroundList, mapper)) yield return v;
+                    Jcf vl = kvp.Value[i];
+                    foreach(string v in vl.MapToString(surroundSub, surroundList, mapper, fullPath, $"{p}{kvp.Key}#{i}")) yield return v;
                 }
                 yield return surroundList.Item2;
             }
             foreach(var kvp in _subs) {
-                yield return surroundSub.Item1(kvp.Key);
-                foreach(string v in kvp.Value.MapToString(surroundSub, surroundList, mapper)) yield return v;
+                yield return surroundSub.Item1($"{p}{kvp.Key}");
+                foreach(string v in kvp.Value.MapToString(surroundSub, surroundList, mapper, fullPath, $"{p}{kvp.Key}")) yield return v;
                 yield return surroundSub.Item2;
             }
         }
