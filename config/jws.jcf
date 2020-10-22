@@ -226,5 +226,13 @@ JWS: {
     ControlPanel: {
         State: on
         URL: /cpanel/
+        WarningOnFailedLogin: on
+        LoginTitle: Control Panel Login
+        CPanelTitle: Control Panel Home
+        Footer: (c) JWS Control Panel - Only for authorized members.
+        CSS: {
+            Login: css/login.css
+            Home: css/home.css
+        }
     }
 }

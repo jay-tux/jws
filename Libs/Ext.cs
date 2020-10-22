@@ -395,5 +395,69 @@ namespace Jay.Ext
         {
             foreach(string key in toEnum) yield return func(key, toEnum[key]);
         }
+
+        public static IEnumerable<T> Zipper<T>(this T[] one, params T[][] others)
+        {
+            for(int i = 0; i < one.Length; i++)
+            {
+                yield return one[i];
+                for(int j = 0; j < others.Length; j++)
+                {
+                    if(others[j].Length > i) yield return others[j][i];
+                }
+            }
+        }
+
+        public static IEnumerable<T> Zipper<T>(this IEnumerable<T> one, params IEnumerable<T>[] others)
+        {
+            List<IEnumerator<T>> all = new List<IEnumerator<T>>();
+            all.Add(one.GetEnumerator());
+            all.AddRange(others.Select(x => x.GetEnumerator()));
+
+            while(all[0].MoveNext())
+            {
+                yield return all[0].Current;
+                for(int i = 1; i < others.Length; i++)
+                {
+                    if(all[i].MoveNext()) yield return all[i].Current;
+                }
+            }
+        }
+
+        public static IEnumerable<(T, T)> ToPairs<T>(this IEnumerable<T> source)
+        {
+            IEnumerator<T> src = source.GetEnumerator();
+            while(src.MoveNext())
+            {
+                T e1 = src.Current;
+                if(src.MoveNext()) yield return (e1, src.Current);
+            }
+        }
+
+        public static IEnumerable<(T, T, T)> ToTriples<T>(this IEnumerable<T> source)
+        {
+            IEnumerator<T> src = source.GetEnumerator();
+            while(src.MoveNext())
+            {
+                T e1 = src.Current;
+                if(src.MoveNext())
+                {
+                    T e2 = src.Current;
+                    if(src.MoveNext()) yield return (e1, e2, src.Current);
+                }
+            }
+        }
+
+        public static Action<T1, T2> Uncurry<T1, T2>(this Action<(T1, T2)> todo)
+            => ((p1, p2) => todo((p1, p2)));
+
+        public static Action<(T1, T2)> Curry<T1, T2>(this Action<T1, T2> todo)
+            => (p => todo(p.Item1, p.Item2));
+
+        public static Func<T1, T2, TOut> Uncurry<T1, T2, TOut>(this Func<(T1, T2), TOut> todo)
+            => ((p1, p2) => todo((p1, p2)));
+
+        public static Func<(T1, T2), TOut> Curry<T1, T2, TOut>(this Func<T1, T2, TOut> todo)
+            => ((p) => todo(p.Item1, p.Item2));
     }
 }

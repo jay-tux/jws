@@ -90,6 +90,9 @@ namespace Jay.Config
             Parent = parent;
         }
 
+        public void EnumerateKeys(Action<string, string> consumer)
+            => _values.ForEach(kvp => consumer(kvp.Key, kvp.Value));
+
         public string Translate(string todo)
         {
             string res = "";
@@ -180,6 +183,27 @@ namespace Jay.Config
         }
 
         public void Save(string filename) => File.WriteAllText(filename, SaveString(0));
+
+        public IEnumerable<string> MapToString(string surroundSub, string surroundList, Func<string, string, string> mapper)
+            => MapToString((s => surroundSub, surroundSub), (s => surroundList, surroundList), mapper);
+        public IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList,
+            Func<string, string, string> mapper)
+        {
+            foreach(var kvp in _values) { yield return mapper(kvp.Key, kvp.Value); }
+            foreach(var kvp in _lists) {
+                yield return surroundList.Item1(kvp.Key);
+                foreach(Jcf vl in kvp.Value)
+                {
+                    foreach(string v in vl.MapToString(surroundSub, surroundList, mapper)) yield return v;
+                }
+                yield return surroundList.Item2;
+            }
+            foreach(var kvp in _subs) {
+                yield return surroundSub.Item1(kvp.Key);
+                foreach(string v in kvp.Value.MapToString(surroundSub, surroundList, mapper)) yield return v;
+                yield return surroundSub.Item2;
+            }
+        }
     }
 
     public static class JcfParser
