@@ -224,7 +224,7 @@ JWS: {
         Indexing: ::
     }
     ControlPanel: {
-        State: on
+        State: off
         URL: /cpanel/
         WarningOnFailedLogin: on
         LoginTitle: Control Panel Login
