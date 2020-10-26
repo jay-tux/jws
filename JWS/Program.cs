@@ -29,6 +29,7 @@ namespace Jay.Web.Server
         public static Program Instance;
         public event EventHandler OnExit;
         private List<(string, LogSeverity, DateTime)> LogBuffer;
+        public static string ConfigContent;
 
         public static void Main(string[] args)
         {
@@ -57,7 +58,7 @@ namespace Jay.Web.Server
             int loc = LoadSettings(locs);
             OnExit += ((o, e) => {
                 Log($"Attempting to save config file to {locs[loc]} (index {loc}).", LogSeverity.Message);
-                _settings.Save(locs[loc]);
+                File.WriteAllText(locs[loc], ConfigContent);
             });
             Log("Settings succesfully loaded.", LogSeverity.Message);
 
@@ -83,6 +84,7 @@ namespace Jay.Web.Server
                 try
                 {
                     f = File.ReadAllText(loc);
+                    ConfigContent = f;
                     break;
                 }
                 catch(IOException) { ret++; }
@@ -451,6 +453,7 @@ namespace Jay.Web.Server
         public void Exit(int code)
         {
             Log("Running OnExit hooks...", LogSeverity.Message);
+            OnExit?.Invoke(this, new EventArgs());
             if(Logger == null)
             {
                 LogBuffer.ForEach(entry => Console.WriteLine(entry));
@@ -459,7 +462,6 @@ namespace Jay.Web.Server
             {
                 if(Logger is JWSChannelLogger jws) jws.Dispose();
             }
-            OnExit?.Invoke(this, new EventArgs());
             Environment.Exit(code);
         }
     }

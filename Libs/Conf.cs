@@ -56,10 +56,36 @@ namespace Jay.Config
             int split = key.IndexOf(".");
             if(split == -1)
             {
+                if(key.Contains("#"))
+                {
+                    if(!int.TryParse(key.Split("#")[1], out int index))
+                        throw new ArgumentException("Invalid key index: " + key.Split("#")[1] + " in key " + key, "key");
+                    key = key.Split("#")[0];
+                    if(!_lists.ContainsKey(key))
+                        throw new ArgumentException("Invalid key: " + key, "key");
+                    if(index >= _lists[key].Count)
+                        throw new ArgumentException("Invalid key index: " + index, "key", new IndexOutOfRangeException());
+
+                    return (this, _lists[key][index], "", JcfType.Jcf);
+                }
                 if(_values.ContainsKey(key)) return (this, _values, key, JcfType.Value);
                 else if(_subs.ContainsKey(key)) return (this, _subs, key, JcfType.Jcf);
                 else if(_lists.ContainsKey(key)) return (this, _lists, key, JcfType.List);
                 else throw new ArgumentException("Invalid key: " + key, "key");
+            }
+            else if(key.Substring(0, split).Contains("#"))
+            {
+                string pre = key.Substring(0, split).Split('#')[0];
+                string i = key.Substring(0, split).Split('#')[1];
+                if(!int.TryParse(i, out int index))
+                    throw new ArgumentException("Invalid key index: " + i + " in key " + key, "key");
+                string post = key.Substring(split + 1);
+                if(_lists.ContainsKey(pre))
+                {
+                    try { return _lists[pre][index].Route(post); }
+                    catch(ArgumentException e) { throw new ArgumentException(e.Message + " in " + pre, "key", e); }
+                }
+                throw new ArgumentException("Invalid partial key: " + pre, "key");
             }
             else
             {
@@ -77,6 +103,7 @@ namespace Jay.Config
         public Jcf()
         {
             _subs = new Dictionary<string, Jcf>();
+            _subs[""] = this;
             _values = new Dictionary<string, string>();
             _lists = new Dictionary<string, List<Jcf>>();
             Parent = null;
@@ -85,6 +112,7 @@ namespace Jay.Config
         public Jcf(Jcf parent)
         {
             _subs = new Dictionary<string, Jcf>();
+            _subs[""] = this;
             _values = new Dictionary<string, string>();
             _lists = new Dictionary<string, List<Jcf>>();
             Parent = parent;
@@ -127,6 +155,7 @@ namespace Jay.Config
         }
 
         public override string ToString() => ToString(0);
+        public virtual string ToFileString() => SaveString(0);
 
         protected virtual string ToString(int depth)
         {
@@ -183,35 +212,6 @@ namespace Jay.Config
         }
 
         public void Save(string filename) => File.WriteAllText(filename, SaveString(0));
-
-        public IEnumerable<string> MapToString(string surroundSub, string surroundList, Func<string, string, string> mapper)
-            => MapToString((s => surroundSub, surroundSub), (s => surroundList, surroundList), mapper);
-        public IEnumerable<string> MapToString(string surroundSub, string surroundList, Func<string, string, string> mapper, bool fullPath)
-            => MapToString((s => surroundSub, surroundSub), (s => surroundList, surroundList), mapper, fullPath);
-        public IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList, Func<string, string, string> mapper)
-            => MapToString(surroundSub, surroundList, mapper, false);
-        public IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList,
-            Func<string, string, string> mapper, bool fullPath) => MapToString(surroundSub, surroundList, mapper, fullPath, "");
-        private IEnumerable<string> MapToString((Func<string, string>, string) surroundSub, (Func<string, string>, string) surroundList,
-            Func<string, string, string> mapper, bool fullPath, string prefix)
-        {
-            string p = fullPath ? (prefix == "" ? "" : $"{prefix}.") : "";
-            foreach(var kvp in _values) { yield return mapper(fullPath ? $"{p}{kvp.Key}" : kvp.Key, kvp.Value); }
-            foreach(var kvp in _lists) {
-                yield return surroundList.Item1($"<br />{p}{kvp.Key}");
-                for(int i = 0; i < kvp.Value.Count; i++)
-                {
-                    Jcf vl = kvp.Value[i];
-                    foreach(string v in vl.MapToString(surroundSub, surroundList, mapper, fullPath, $"{p}{kvp.Key}#{i}")) yield return v;
-                }
-                yield return surroundList.Item2;
-            }
-            foreach(var kvp in _subs) {
-                yield return surroundSub.Item1($"{p}{kvp.Key}");
-                foreach(string v in kvp.Value.MapToString(surroundSub, surroundList, mapper, fullPath, $"{p}{kvp.Key}")) yield return v;
-                yield return surroundSub.Item2;
-            }
-        }
     }
 
     public static class JcfParser

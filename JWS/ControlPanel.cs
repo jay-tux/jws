@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Linq;
 using System.Collections.Generic;
@@ -20,7 +21,6 @@ namespace Jay.Web.Server
         private static SHA256 Hasher;
         private static string CPath;
         private static List<string> Tokens;
-        private static int _currindex;
 
         private static List<string> LoadHashes()
         {
@@ -227,18 +227,54 @@ namespace Jay.Web.Server
                 if(Tokens.Contains(req.POST["token"]))
                 {
                     Program.Logger.LogFormatted("CPanel", $"Authorized user connected.", LogSeverity.Message);
-                    if(req.POST.ContainsKey("action") && req.POST["action"] == "update")
+                    if(req.POST.ContainsKey("action") && req.POST["action"] == "prep")
                     {
-                        //update settings
-                        req.POST.Where(x => x.Key.StartsWith("JWS")).ForEach(kvp => {
-                            string key = UndoHTML(kvp.Key);
-                            string val = UndoHTML(kvp.Value);
-                            //Program.Settings[key] = value;
-                            Console.WriteLine(key.PadRight(64, ' ') + " " + val);
-                        });
+                        if(req.POST.ContainsKey("file"))
+                        {
+                            GenerateCPanelFile(res, req.POST["token"], WebUtility.UrlDecode(req.POST["file"]));
+                            res.Finish();
+                        }
+                        else
+                        {
+                            res.Content = res.LoadError(400);
+                            res.StatusCode = 400;
+                            res.Finish();
+                        }
                     }
-                    GenerateCPanelMain(res, req.POST["token"]);
-                    res.Finish();
+                    else if(req.POST.ContainsKey("action") && req.POST["action"] == "update")
+                    {
+                        if(req.POST.ContainsKey("file") && req.POST.ContainsKey("cnt"))
+                        {
+                            //update files
+                            string file = WebUtility.UrlDecode(req.POST["file"]);
+                            string content = WebUtility.UrlDecode(req.POST["cnt"]);
+                            if(file == "cfg") Program.ConfigContent = content;
+                            GenerateCPanelMain(res, req.POST["token"]);
+
+                            try
+                            {
+                                File.WriteAllText(file, content);
+                                Program.Logger.LogFormatted("cpanel_write", $"Updated {file}.", LogSeverity.Message);
+                            }
+                            catch(Exception ioe)
+                            {
+                                Program.Logger.LogFormatted("cpanel_write", $"Attempted to write to {file}; failed: {ioe.Message}.", LogSeverity.Warning);
+                                res.Content.Replace("<div></div>", "<p class=error>Failed to write file.</p>");
+                            }
+                            res.Finish();
+                        }
+                        else
+                        {
+                            res.Content = res.LoadError(400);
+                            res.StatusCode = 400;
+                            res.Finish();
+                        }
+                    }
+                    else
+                    {
+                        GenerateCPanelMain(res, req.POST["token"]);
+                        res.Finish();
+                    }
                 }
                 else
                 {
@@ -250,40 +286,61 @@ namespace Jay.Web.Server
             }
         }
 
-        private static string UndoHTML(string v)
-            => v.Replace("%40", "@").Replace("%2F", "/").Replace("%23", "#").Replace("%3A", ":").Replace("+", " ").Replace("%28", "(")
-                .Replace("%29", ")").Replace("%7E", "~").Replace("%24", "$").Replace("%27", "'");
-
-        private static void GenerateCPanelMain(Response target, string token)
+        private static void GenerateCPanelFile(Response target, string token, string file)
         {
-            _currindex = 0;
+            bool success = true;
+            string fcnt;
+            try
+            {
+                fcnt = file == "Config file" ? Program.ConfigContent : (file == "New file" ? "" : File.ReadAllText(file));
+            }
+            catch(Exception)
+            {
+                success = false;
+                fcnt = "";
+            }
             string form = $"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=utf-8 />\n<title>{Listener.ServerName} - {CPanelTitle}</title>\n" +
-                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheet type=\"text/css\" />\n" : "") +
-                $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1><h3>Some changes might not be applied before the JWS is restarted.</h3>\n" +
-                $"<form action=\"{CPath}\" method=POST>\n" +
-                string.Join("\n", Program.Settings.MapToString(
-                    (s => $"<div id={s}><b>{s}</b>", "</div>"),
-                    (s => $"<i>{s}</i><ul id={s}>", $"</ul>"),
-                    ((k, v) => $"<li id={k}>{ToKey(k)}: <input type=text value=\"{v}\" name=\"{k}\" /></li>"),
-                    true
-                )) +
-                $"<input type=hidden name=token value=\"{token}\" />\n<input type=hidden name=action value=update />\n" +
-                $"<input type=submit value=\"Update JWS Settings\" />\n</form>\n<div class=footer>{Footer}</div>\n</body>\n</html>";
+                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheed type=\"text/css\" />\n" : "") +
+                $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1>\n<div class=center>\n<form action=\"{CPath}\" id=main method=POST>" +
+                (file == "Config file" ? "<input type=hidden name=file value=cfg />" :
+                    ("File path: <input type=text name=file " + (file == "New file" ? "" : $"value=\"{file}\" readonly") + " /><br />")) +
+                $"<textarea name=cnt rows=40 cols=80 form=main>{fcnt}</textarea><br />\n" +
+                ((success) ? "" : $"<p class=error>Couldn't load the requested file.</p><br />\n") +
+                $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=update /><br />\n" +
+                "<input type=submit value=\"Update File\" /></form></div>\n" +
+                $"<div class=footer>{Footer}</div>\n</body>\n</html>";
             target.Content = form;
             target.StatusCode = 200;
         }
 
-        private static string ToKey(string key)
+        private static void GenerateCPanelMain(Response target, string token)
         {
-            if(key.Contains("#"))
-            {
-                _currindex = int.Parse(key.Split('#')[1].Split('.')[0]);
-                return key.Split('.').Last() + " " + _currindex;
-            }
-            else
-            {
-                return key.Split('.').Last();
-            }
+            string form = $"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=utf-8 />\n<title>{Listener.ServerName} - {CPanelTitle}</title>\n" +
+                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheed type=\"text/css\" />\n" : "") +
+                $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1><div></div>\n<div class=center>\n<form action=\"{CPath}\" method=POST>" +
+                $"<select name=file id=sl>{string.Join("", FileList().Select(x => $"<option value=\"{x}\">{x}</option>"))}</select>" +
+                $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=prep /><br />\n" +
+                "<input type=submit value=\"Open File\" /></form></div>\n" +
+                $"<div class=footer>{Footer}</div>\n</body>\n</html>";
+            target.Content = form;
+            target.StatusCode = 200;
+        }
+
+        private static IEnumerable<string> FileList()
+        {
+            yield return "New file";
+            yield return "Config file";
+            foreach(string entry in GetSystemEntries(Listener.HTMLDir)) yield return entry;
+            foreach(string entry in GetSystemEntries(Listener.ErrorDir)) yield return entry;
+            if(Templating.TemplateDir != null)
+                foreach(string entry in GetSystemEntries(Templating.TemplateDir)) yield return entry;
+        }
+
+        private static IEnumerable<string> GetSystemEntries(string pth)
+        {
+            foreach(string f in Directory.EnumerateFiles(pth)) yield return f;
+            foreach(string d in Directory.EnumerateDirectories(pth))
+                foreach(string f in GetSystemEntries(d)) yield return f;
         }
 
         private static void GenerateLogin(Response target)
