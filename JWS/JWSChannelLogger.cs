@@ -41,6 +41,7 @@ namespace Jay.Web.Server
                     {
                         x.Dispose();
                     }
+                    catch(ObjectDisposedException) {}
                     catch(Exception e)
                     {
                         Console.Error.WriteLine($"Failed to finalize one of the streams: {e.Message}.");

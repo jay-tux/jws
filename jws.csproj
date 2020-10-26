@@ -3,6 +3,9 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
+    <PropertyGroup>
+        <DefaultItemExcludes>Testing/*</DefaultItemExcludes>
+    </PropertyGroup>
     <ItemGroup>
     </ItemGroup>
 </Project>

@@ -271,12 +271,14 @@ namespace Jay.Web.Server
             if(!resp._finished) resp.AttemptRoute();
             if(!resp._finished) resp.AttemptLiteral();
             _hooks.ForEach(hook => {
-                if(hook.Item1(r, resp)) hook.Item2(r, resp);
+                if(!resp._finished && hook.Item1(r, resp)) hook.Item2(r, resp);
             });
             resp.ContentLength = resp.Buffer.Length;
 
             return resp;
         }
+
+        public void Finish() => _finished = true;
 
         public void Write(HttpListenerResponse resp)
         {

@@ -31,6 +31,7 @@ namespace Jay.Web.Server
         public event EventHandler OnExit;
         private List<(string, LogSeverity, DateTime)> LogBuffer;
         private bool Overridden;
+        public static string ConfigContent;
 
         public static void Main(string[] args)
         {
@@ -96,7 +97,7 @@ namespace Jay.Web.Server
                     Log($"Overridden {kvp.Key} to be {kvp.Value}.", LogSeverity.Debug);
                 }
             });
-
+            
             if(!Overridden) {
                 OnExit += ((o, e) => {
                     Log($"Attempting to save config file to {locs[loc]} (index {loc}).", LogSeverity.Message);
@@ -197,6 +198,7 @@ namespace Jay.Web.Server
                 try
                 {
                     f = File.ReadAllText(loc);
+                    ConfigContent = f;
                     break;
                 }
                 catch(IOException) { ret++; }
@@ -559,11 +561,13 @@ namespace Jay.Web.Server
         private void Hooks()
         {
             Templating.Load();
+            ControlPanel.Load();
         }
 
         public void Exit(int code)
         {
             Log("Running OnExit hooks...", LogSeverity.Message);
+            OnExit?.Invoke(this, new EventArgs());
             if(Logger == null)
             {
                 LogBuffer.ForEach(entry => Console.WriteLine(entry));
@@ -572,7 +576,6 @@ namespace Jay.Web.Server
             {
                 if(Logger is JWSChannelLogger jws) jws.Dispose();
             }
-            OnExit?.Invoke(this, new EventArgs());
             Environment.Exit(code);
         }
     }
