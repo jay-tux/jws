@@ -20,6 +20,7 @@ There are two locations where JWS will look for the configuration file: `$HOME/.
 `/usr/local/etc/jws/jws.jcf` (or `%APPDATA/jws/jws.jcf` on Windows), so I recommend copying the default config file (`config/jws.jcf`) to one of those locations.  
 *This is the easy configuration guide, for a more in-depth guide, see [In-depth Configuration](../../blob/master/advanced.md)*  
 *For the guide on templating, see [JWS Templates](../../blob/master/templates.md)*  
+*For the guide on the builtin control panel, see [JWS Default Control Panel](../../blob/master/cpanel.md)*  
 
 ### Some Configuration variables
 *If the config file looks like gibberish to you, take a look at [Reading the Configuration File](../../blob/master/jcf.md)*  
@@ -47,6 +48,8 @@ You can use command-line arguments to override the settings or even the setting 
  - `--error <directory>`: uses `<directory>` rather than `JWS.Paths.Error`,  
  - `--template <directory>`: uses `<directory>` rather than `JWS.Paths.Template`, and  
  - `--name <name>`: uses `<name>` rather than `JWS.Server.Name`.  
+
+*Note when overriding settings:* the overridden settings are never saved and can't be seen when using the control panel.  
 
 **Toggles:**
  - `--help`: displays a help message and exits,  

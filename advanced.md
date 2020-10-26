@@ -37,6 +37,7 @@
        - `JWS.Logging.Formatting.Formatting`: the format string for all messages.  
    All other blocks in the `JWS.Logging` block are used to define Channel logger behavior.  
    - `JWS.Templates`: this block contains all settings regarding templates; for a description, see [JWS Templates](../../blob/master/templates.md).  
+   - `JWS.ControlPanel`: this block contains all settings regarding the builtin control panel; for a description, see [JWS Default Control Panel](../../blob/master/cpanel.md).  
 
 ### `JWS.Paths.HTML` and `JWS.Paths.Error`
 There are two constants you can use in these variables: `@Home` for the home directory and `@Data` for the data directory (`/usr/local/etc/jws` on *nix and `%APPDATA%/jws` on Windows).  
