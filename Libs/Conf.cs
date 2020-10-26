@@ -11,6 +11,7 @@ namespace Jay.Config
         private Dictionary<string, Jcf> _subs;
         private Dictionary<string, string> _values;
         private Dictionary<string, List<Jcf>> _lists;
+        private Dictionary<string, string> _overrides;
         public Jcf Parent { get; private set; }
 
         public object this[string key]
@@ -21,11 +22,14 @@ namespace Jay.Config
 
         private object GetKey(string key)
         {
+            if(_overrides.ContainsKey(key)) return _overrides[key];
             var res = Route(key);
             if(res.Item4 == JcfType.Value) return res.Item1.Translate(((Dictionary<string, string>)res.Item2)[res.Item3]);
             if(res.Item4 == JcfType.Jcf) return ((Dictionary<string, Jcf>)res.Item2)[res.Item3];
             else return ((Dictionary<string, List<Jcf>>)res.Item2)[res.Item3];
         }
+
+        public void Override(string key, string val) => _overrides[key] = val;
 
         private void SetKey(string key, object val)
         {
@@ -79,6 +83,7 @@ namespace Jay.Config
             _subs = new Dictionary<string, Jcf>();
             _values = new Dictionary<string, string>();
             _lists = new Dictionary<string, List<Jcf>>();
+            _overrides = new Dictionary<string, string>();
             Parent = null;
         }
 
@@ -87,6 +92,7 @@ namespace Jay.Config
             _subs = new Dictionary<string, Jcf>();
             _values = new Dictionary<string, string>();
             _lists = new Dictionary<string, List<Jcf>>();
+            _overrides = new Dictionary<string, string>();
             Parent = parent;
         }
 
