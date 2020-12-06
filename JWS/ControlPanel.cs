@@ -17,23 +17,33 @@ namespace Jay.Web.Server
         private static string CPanelTitle = "Control Panel";
         private static string Footer = "Control Panel - Only for Authorized Users";
         private static Dictionary<string, string> CSS = new Dictionary<string, string>();
-        private static List<string> Hashes;
+        //private static List<string> Hashes;
+        private static Dictionary<string, string> Hashes;
         private static SHA256 Hasher;
         private static string CPath;
         private static List<string> Tokens;
 
-        private static List<string> LoadHashes()
+        private static Dictionary<string, string> LoadHashes()
         {
             try
             {
                 Program.Logger.LogFormatted("_cpanel_hashes", $"Loading Hashes from {Program.Data()}/jws/hs.", LogSeverity.Debug);
                 if(!File.Exists(Program.Data() + "/jws/hs"))
                 {
-                    File.WriteAllText(Program.Data() + "/jws/hs", UserHash("admin", "admin"));
+                    File.WriteAllText(Program.Data() + "/jws/hs", "admin>" + UserHash("admin", "admin"));
                 }
 
-                List<string> res = new List<string>();
-                File.ReadAllLines(Program.Data() + "/jws/hs").ForEach(line => res.Add(line));
+                Dictionary<string, string> res = new Dictionary<string, string>();
+                //List<string> res = new List<string>();
+                //File.ReadAllLines(Program.Data() + "/jws/hs").ForEach(line => res.Add(line));
+                File.ReadAllLines(Program.Data() + "/jws/hs").ForEach(line => {
+                    string[] sp;
+                    if(!line.Contains(">") || (sp = line.Split('>')).Length != 2)
+                        Program.Logger.LogFormatted("_cpanel_hashes", $"Line {line} invalid. Should contain exactly one splitter element '>'.", LogSeverity.Warning);
+                    else
+                        //Hashes[sp[0]] = sp[1];
+                        res[sp[0]] = sp[1];
+                });
                 return res;
             }
             catch(UnauthorizedAccessException)
@@ -180,7 +190,22 @@ namespace Jay.Web.Server
                 (req, resp) => req.Path == CPath,
                 (req, resp) => GenerateCPanel(req, resp)
             );
-            Program.Logger.LogFormatted("_hook_cpanel", "Hook successful!", LogSeverity.Debug);
+            Program.Logger.LogFormatted("_hook_cpanel", "Hooking into Shutdown (1 hook).", LogSeverity.Debug);
+            Program.Instance.OnExit += (s, e) => {
+                Console.WriteLine("-- Running cpanel exit hook --");
+                try {
+                    File.WriteAllLines(Program.Data() + "/jws/hs", Hashes.JoinPairs('>'));
+                }
+                catch(UnauthorizedAccessException ue)
+                {
+                    Console.Error.WriteLine("Can't open hashes file " + Program.Data() + "/jws/hs.");
+                }
+                catch(IOException ioe)
+                {
+                    Console.Error.WriteLine("Can't open hashes file " + Program.Data() + "/jws/hs.");
+                }
+            };
+            Program.Logger.LogFormatted("_hook_cpanel", "Hooks successful!", LogSeverity.Debug);
         }
 
         public static void GenerateCPanel(Request req, Response res)
@@ -199,7 +224,7 @@ namespace Jay.Web.Server
                 {
                     Program.Logger.LogFormatted("CPanel", $"User {req.POST["un"]} attempted to log in. Checking credentials...", LogSeverity.Message);
                     string h = UserHash(req.POST["un"], req.POST["pw"]);
-                    if(Hashes.Contains(h))
+                    if(Hashes.ContainsValue(h))
                     {
                         Program.Logger.LogFormatted("CPanel", $"User {req.POST["un"]} succesfully authenticated.", LogSeverity.Message);
                         string tok = GenToken(req);

@@ -97,11 +97,12 @@ namespace Jay.Web.Server
                     Log($"Overridden {kvp.Key} to be {kvp.Value}.", LogSeverity.Debug);
                 }
             });
-            
+
             if(!Overridden) {
                 OnExit += ((o, e) => {
                     Log($"Attempting to save config file to {locs[loc]} (index {loc}).", LogSeverity.Message);
                     _settings.Save(locs[loc]);
+                    Log($"Settings saved.", LogSeverity.Message);
                 });
             }
             Log("Settings succesfully loaded.", LogSeverity.Message);
