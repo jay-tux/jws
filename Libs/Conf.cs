@@ -200,7 +200,7 @@ namespace Jay.Config
             for(int i = 0; i < depth; i++) d += " ";
 
             string res = (depth == 0) ? "" : "{\n";
-            _subs.ForEach(sub => res += $"{d}{sub.Key}: {sub.Value.SaveString(depth + 4)}\n");
+            _subs.ForEach(sub => res += (sub.Key == "") ? "" : $"{d}{sub.Key}: {sub.Value.SaveString(depth + 4)}\n");
             _values.ForEach(val => res += $"{d}{val.Key}: {val.Value}\n");
             _lists.ForEach(l => res += ListString(depth, l.Key));
 
