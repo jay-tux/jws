@@ -92,6 +92,8 @@ namespace Jay.Web.Server
         public static void Hook(Func<Request, Response, bool> filter, Action<Request, Response> consumer)
             => _hooks.Add((filter, consumer));
 
+        public string? this[HttpResponseHeader h] { get => Headers[h]; set => Headers[h] = value; }
+
         public string LoadError(int code)
         {
             string fallback = "<html><head><meta charset=\"utf-8\" /><title>" + Listener.ServerName + " - HTTP " + code.ToString() + "</title></head>"

@@ -17,7 +17,6 @@ namespace Jay.Web.Server
         private static string CPanelTitle = "Control Panel";
         private static string Footer = "Control Panel - Only for Authorized Users";
         private static Dictionary<string, string> CSS = new Dictionary<string, string>();
-        //private static List<string> Hashes;
         private static Dictionary<string, string> Hashes;
         private static SHA256 Hasher;
         private static string CPath;
@@ -40,9 +39,11 @@ namespace Jay.Web.Server
                     string[] sp;
                     if(!line.Contains(">") || (sp = line.Split('>')).Length != 2)
                         Program.Logger.LogFormatted("_cpanel_hashes", $"Line {line} invalid. Should contain exactly one splitter element '>'.", LogSeverity.Warning);
-                    else
+                    else {
                         //Hashes[sp[0]] = sp[1];
                         res[sp[0]] = sp[1];
+                        Program.Logger.LogFormatted("_cpanel_hashes", $"User {sp[0]}, hash {sp[1]}.", LogSeverity.Debug);
+                    }
                 });
                 return res;
             }
@@ -192,7 +193,7 @@ namespace Jay.Web.Server
             );
             Program.Logger.LogFormatted("_hook_cpanel", "Hooking into Shutdown (1 hook).", LogSeverity.Debug);
             Program.Instance.OnExit += (s, e) => {
-                Console.WriteLine("-- Running cpanel exit hook --");
+                Program.Logger.LogFormatted("_hook_cpanel", "CPanel shutting down.", LogSeverity.Debug);
                 try {
                     File.WriteAllLines(Program.Data() + "/jws/hs", Hashes.JoinPairs('>'));
                 }
@@ -234,6 +235,7 @@ namespace Jay.Web.Server
                     else
                     {
                         Program.Logger.LogFormatted("CPanel", $" === USER {req.POST["un"]} ATTEMPTED TO LOG IN BUT WAS UNSUCCESFUL ===", LogSeverity.Warning);
+                        Program.Logger.LogFormatted("CPanel", $"Note: username = {req.POST["un"]}, hash = {h}", LogSeverity.Message);
                         res.Content = res.LoadError(403);
                         res.StatusCode = 403;
                         res.Finish();
@@ -295,6 +297,48 @@ namespace Jay.Web.Server
                             res.Finish();
                         }
                     }
+                    else if(req.POST.ContainsKey("action") && req.POST["action"] == "usrs")
+                    {
+                        GenerateCPanelUsers(res, req.POST["token"]);
+                        res.Finish();
+                    }
+                    else if(req.POST.ContainsKey("action") && req.POST["action"] == "updusr")
+                    {
+                        //run updates
+                        if(req.POST.ContainsKey("usrt"))
+                        {
+                            if(req.POST["usrt"] == "add" && req.POST.ContainsKey("uname") && !Hashes.ContainsKey(req.POST["uname"])
+                                && req.POST.ContainsKey("pword"))
+                            {
+                                Hashes[req.POST["uname"]] = UserHash(req.POST["uname"], req.POST["pword"]);
+                                GenerateCPanelMain(res, req.POST["token"]);
+                            }
+                            else if(req.POST["usrt"] == "rem" && req.POST.ContainsKey("user") && Hashes.ContainsKey(req.POST["user"]))
+                            {
+                                Hashes.Remove(req.POST["user"]);
+                                GenerateCPanelMain(res, req.POST["token"]);
+                            }
+                            else
+                            {
+                                res.Content = res.LoadError(400);
+                                res.StatusCode = 400;
+                                res.Finish();
+                            }
+                        }
+                        else
+                        {
+                            res.Content = res.LoadError(400);
+                            res.StatusCode = 400;
+                            res.Finish();
+                        }
+                    }
+                    else if(req.POST.ContainsKey("action") && req.POST["action"] == "logout")
+                    {
+                        Tokens.Remove(req.POST["token"]);
+                        res.Content = "";
+                        res.StatusCode = 301;
+                        res[HttpResponseHeader.Location] = "/";
+                    }
                     else
                     {
                         GenerateCPanelMain(res, req.POST["token"]);
@@ -325,14 +369,36 @@ namespace Jay.Web.Server
                 fcnt = "";
             }
             string form = $"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=utf-8 />\n<title>{Listener.ServerName} - {CPanelTitle}</title>\n" +
-                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheed type=\"text/css\" />\n" : "") +
+                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheet type=\"text/css\" />\n" : "") +
                 $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1>\n<div class=center>\n<form action=\"{CPath}\" id=main method=POST>" +
                 (file == "Config file" ? "<input type=hidden name=file value=cfg />" :
                     ("File path: <input type=text name=file " + (file == "New file" ? "" : $"value=\"{file}\" readonly") + " /><br />")) +
                 $"<textarea name=cnt rows=40 cols=80 form=main>{fcnt}</textarea><br />\n" +
                 ((success) ? "" : $"<p class=error>Couldn't load the requested file.</p><br />\n") +
                 $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=update /><br />\n" +
-                "<input type=submit value=\"Update File\" /></form></div>\n" +
+                $"<input type=submit value=\"Update File\" /></form></div>\n" +
+                $"<form action=\"{CPath}\" id=lout method=POST><input type=hidden name=action value=logout /><input type=hidden name=token value=\"{token}\" />" +
+                $"<input type=submit value=Logout /></form>" +
+                $"<div class=footer>{Footer}</div>\n</body>\n</html>";
+            target.Content = form;
+            target.StatusCode = 200;
+        }
+
+        private static void GenerateCPanelUsers(Response target, string token)
+        {
+            string form = $"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=utf-8 />\n<title>{Listener.ServerName} - {CPanelTitle}</title>\n" +
+                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheet type=\"text/css\" />\n" : "") +
+                $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1><div></div>\n<div class=center>\n" +
+                $"\n<form action=\"{CPath}\" method=POST>" +
+                $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=updusr /><input type=hidden name=usrt value=add /><br />\n" +
+                $"Username: <input type=text name=uname /><br />Password: <input type=password name=pword /><br /><input type=submit value=\"Add User\" /></form><br />" +
+                $"<form action=\"{CPath}\" method=POST>" +
+                $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=updusr /><input type=hidden name=usrt value=rem /><br />" +
+                $"<select name=user id=sl>{string.Join("", Hashes.Keys.Select(x => $"<option value=\"{x}\">{x}</option>"))}</select><br />" +
+                $"<input type=submit value=\"Modify CPanel users\" />" +
+                $"</form></div>\n" +
+                $"<form action=\"{CPath}\" id=lout method=POST><input type=hidden name=action value=logout /><input type=hidden name=token value=\"{token}\" />" +
+                $"<input type=submit value=Logout /></form>" +
                 $"<div class=footer>{Footer}</div>\n</body>\n</html>";
             target.Content = form;
             target.StatusCode = 200;
@@ -341,11 +407,17 @@ namespace Jay.Web.Server
         private static void GenerateCPanelMain(Response target, string token)
         {
             string form = $"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=utf-8 />\n<title>{Listener.ServerName} - {CPanelTitle}</title>\n" +
-                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheed type=\"text/css\" />\n" : "") +
-                $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1><div></div>\n<div class=center>\n<form action=\"{CPath}\" method=POST>" +
+                (CSS.ContainsKey("Home") ? $"<link href=\"../{CSS["Home"]}\" rel=stylesheet type=\"text/css\" />\n" : "") +
+                $"</head>\n<body><h1>{Listener.ServerName} - Control Panel</h1><div></div>\n<div class=center>\n" +
+                $"\n<form action=\"{CPath}\" method=POST>" +
                 $"<select name=file id=sl>{string.Join("", FileList().Select(x => $"<option value=\"{x}\">{x}</option>"))}</select>" +
                 $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=prep /><br />\n" +
-                "<input type=submit value=\"Open File\" /></form></div>\n" +
+                $"<input type=submit value=\"Open File\" /></form><br />" +
+                $"<form action=\"{CPath}\" method=POST>" +
+                $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=usrs /><input type=submit value=\"Modify CPanel users\" />" +
+                $"</form></div>\n" +
+                $"<form action=\"{CPath}\" id=lout method=POST><input type=hidden name=action value=logout /><input type=hidden name=token value=\"{token}\" />" +
+                $"<input type=submit value=Logout /></form>" +
                 $"<div class=footer>{Footer}</div>\n</body>\n</html>";
             target.Content = form;
             target.StatusCode = 200;
@@ -385,7 +457,7 @@ namespace Jay.Web.Server
             if(Hasher == null) Hasher = SHA256.Create();
             byte[] name = Encoding.Unicode.GetBytes(un);
             byte[] pass = Encoding.Unicode.GetBytes(pw);
-            return Hasher.ComputeHash(Hasher.ComputeHash(name).Append(Hasher.ComputeHash(pass))).ToChars();
+            return Hasher.ComputeHash(Hasher.ComputeHash(name).Append(Hasher.ComputeHash(pass))).ToHex();
         }
 
         private static string GenToken(Request from)

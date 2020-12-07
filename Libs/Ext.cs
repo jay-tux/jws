@@ -460,13 +460,10 @@ namespace Jay.Ext
         public static Func<(T1, T2), TOut> Curry<T1, T2, TOut>(this Func<T1, T2, TOut> todo)
             => ((p) => todo(p.Item1, p.Item2));
 
-        //public static IEnumerable<TOut> CombinePairs<TIn1, TIn2, TOut>(this Dictionary<TIn1, TIn2> src, Func<TIn1, TIn2, TOut> mapper)
-            //=> src.Select((x1, x2) => mapper(x1, x2));
-
         public static IEnumerable<string> JoinPairs(this Dictionary<string, string> src, string delim)
-            => src.Select((x1, x2) => $"{x1}{delim}{x2}");
+            => src.Select(kvp => $"{kvp.Key}{delim}{kvp.Value}");
 
         public static IEnumerable<string> JoinPairs(this Dictionary<string, string> src, char delim)
-            => src.Select((x1, x2) => $"{x1}{delim}{x2}");
+            => src.Select(kvp => $"{kvp.Key}{delim}{kvp.Value}");
     }
 }
