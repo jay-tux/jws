@@ -1,5 +1,6 @@
 #JWS - Control Panel
-JWS comes with a builtin client-side (browser) control panel. By default, this control panel is located under `/cpanel/`, and can be accessed with username `admin` and password `admin`. At the moment, there is no support for changing these usernames and/or passwords, except for editing the hashes file yourself (**not recommended**), therefore, the control panel is disabled by default and it's not recommended to enable it until this security flaw is fixed.  
+JWS comes with a builtin client-side (browser) control panel. By default, this control panel is located under `/cpanel/`, and can be accessed with username `admin` and password `admin`.  
+*The security flaw (unchangeable username/password for admin users) has been fixed.*
 
 ## Associated Settings
 The `JWS.ControlPanel` block in the config file is dedicated to control panel settings. These settings are:  
