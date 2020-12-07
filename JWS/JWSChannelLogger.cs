@@ -15,7 +15,7 @@ namespace Jay.Web.Server
         public JWSChannelLogger() {}
 
         public void Log(string message) => Log(message, LogSeverity.Message);
-        public void Log(object message) => Log(message, LogSeverity.Message);
+        public void Log(object message) => Log(message.ToString(), LogSeverity.Message);
         public void Log(object message, LogSeverity severity) => Log(message.ToString(), severity);
         public void Log(string message, LogSeverity severity)
         {

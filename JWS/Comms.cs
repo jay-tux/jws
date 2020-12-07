@@ -82,7 +82,7 @@ namespace Jay.Web.Server
         public CookieCollection Cookies;
         public WebHeaderCollection Headers;
         public int StatusCode;
-        public byte[] Buffer;
+        private byte[] Buffer;
         public string Content { get => Encoding.UTF8.GetString(Buffer); set => Buffer = Encoding.UTF8.GetBytes(value); }
         private static List<(Func<Request, Response, bool>, Action<Request, Response>)> _hooks =
             new List<(Func<Request, Response, bool>, Action<Request, Response>)>();
@@ -272,9 +272,11 @@ namespace Jay.Web.Server
             resp.AttemptRootRoute();
             if(!resp._finished) resp.AttemptRoute();
             if(!resp._finished) resp.AttemptLiteral();
-            _hooks.ForEach(hook => {
-                if(!resp._finished && hook.Item1(r, resp)) hook.Item2(r, resp);
-            });
+            if(!resp._finished) {
+                _hooks.ForEach(hook => {
+                    if(!resp._finished && hook.Item1(r, resp)) hook.Item2(r, resp);
+                });
+            }
             resp.ContentLength = resp.Buffer.Length;
 
             return resp;
