@@ -46,7 +46,7 @@ Implements: [IEventLogger](./IEventLogger.md).
  - ``public abstract void CascadeLog(string message, LogSeverity severity)``: perform actual logging of a message, with a given severity.  
 
 ## Class Jay.IO.Logging.LogEventArgs
-*Event data for Diagnostic Log Events.*  
+*Event data for Log Events.*  
 Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [EventArgs](https://docs.microsoft.com/en-us/dotnet/api/system.eventargs?view=net-5.0) -> [LogEventArgs](./IEventLogger.md).  
 
 ### Fields

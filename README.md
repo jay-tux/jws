@@ -21,6 +21,7 @@ There are two locations where JWS will look for the configuration file: `$HOME/.
 *This is the easy configuration guide, for a more in-depth guide, see [In-depth Configuration](../../blob/master/advanced.md)*  
 *For the guide on templating, see [JWS Templates](../../blob/master/templates.md)*  
 *For the guide on the builtin control panel, see [JWS Default Control Panel](../../blob/master/cpanel.md)*  
+*For the source code documentation, see [Source Code Documentation](./source.md)
 
 ### Some Configuration variables
 *If the config file looks like gibberish to you, take a look at [Reading the Configuration File](../../blob/master/jcf.md)*  
