@@ -3,7 +3,7 @@
 
 ## Class Jay.Web.Server.Request
 *A class to access request headers, cookies and other data.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Request](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Request](./Comms.md).
 
 ### Fields
  - ``public Encoding ContentEncoding``: the [System.Text.Encoding](https://docs.microsoft.com/en-us/dotnet/api/system.text.encoding?view=net-5.0) used in the request.  
@@ -25,7 +25,7 @@ Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?
 
 ## Class Jay.Web.Server.Response
 *A class to prepare a response.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Response](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Response](./Comms.md).
 
 ### Fields
  - ``public Encoding ContentEncoding``: the [System.Text.Encoding](https://docs.microsoft.com/en-us/dotnet/api/system.text.encoding?view=net-5.0) used in the request.  

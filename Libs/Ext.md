@@ -3,7 +3,7 @@
 
 ## Class Jay.Ext.Ext
 *A static class containing multiple extension methods.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Ext](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Ext](./Ext.md).
 
 ### Static Methods
  - ``static string GetIP()``: gets the first IPv4 currently used of this machine.

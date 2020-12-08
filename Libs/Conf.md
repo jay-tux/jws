@@ -3,7 +3,7 @@
 
 ## Class Jay.Config.Jcf
 *The tree-like data structure for the configuration data.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Jcf](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Jcf](./Conf.md).
 
 ### Fields
  - ``public Jcf Parent``: this Jcf's parent; can be null.
@@ -35,7 +35,7 @@ Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?
 
 ## Class Jay.Config.JcfParser
 *A static class for parsing JCF files.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [JcfParser](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [JcfParser](./Conf.md).
 
 ### Static Methods
  - ``public static Jcf Parse(string file, Jcf parent = null)``: reads ``string`` into a Jcf object and returns it. ``parent`` is used for recursive calls. *Throws a JcfException if fails.*  
@@ -44,7 +44,7 @@ Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?
 
 ## Class Jay.Config.JcfException
 *Exception class for representing parsing errors.*  
-Inheritance: Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Exception](https://docs.microsoft.com/en-us/dotnet/api/system.exception?view=net-5.0) -> [JcfException](.).
+Inheritance: Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Exception](https://docs.microsoft.com/en-us/dotnet/api/system.exception?view=net-5.0) -> [JcfException](./Conf.md).
 
 ### Constructors
  - ``public JcfException(string message)``: creates a new JcfException with the given message.  

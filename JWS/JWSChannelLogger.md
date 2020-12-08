@@ -3,7 +3,7 @@
 
 ## Class Jay.Web.Server.JWSChannelLogger
 *The default channel-based logger for JWS.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [JWSChannelLogger](.).  
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [JWSChannelLogger](./JWSChannelLogger.md).  
 Implements: [ILogger](../Logger/ILogger.md), [IDisposable](https://docs.microsoft.com/en-us/dotnet/api/system.idisposable?view=net-5.0).
 
 ### Fields

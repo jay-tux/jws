@@ -3,7 +3,7 @@
 
 ## Class Jay.Web.Server.Program
 *The default entry point, along with some convenience functions. Is a singleton class.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [JWSChannelLogger](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Program](./Program.md).
 
 ### Fields
  - ``public event EventHandler OnExit``: controls the exit hooks.

@@ -3,7 +3,7 @@
 
 ## Class Jay.Web.Server.Listener
 *The main loop controller for JWS.*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Listener](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Listener](./Listener.md).
 
 ### Fields
  - ``public static string HTMLDir``: the directory in which the HTML server files reside (the root directory for the server).  

@@ -3,7 +3,7 @@
 
 ## Class Jay.Web.Server.Templating
 *Static class which handles the templating (if enabled).*  
-Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Templating](.).
+Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?view=net-5.0) -> [Templating](./Templating.md).
 
 ## Static Fields
  - ``public static string MIMETemplate``: the MIME type corresponding to the template files (see the configuration settings).  
