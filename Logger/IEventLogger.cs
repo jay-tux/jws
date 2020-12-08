@@ -13,7 +13,7 @@ namespace Jay.IO.Logging
 
     public abstract class DefaultEventLogger : IEventLogger
     {
-        protected static bool FirePre;
+        protected bool FirePre;
         public event EventHandler<LogEventArgs> LogEvent;
         public event EventHandler<LogEventArgs> LogWarningEvent;
         public event EventHandler<LogEventArgs> LogMessageEvent;
