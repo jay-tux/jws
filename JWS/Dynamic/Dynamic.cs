@@ -1,10 +1,12 @@
 using System;
+using Jay.Web.Server;
+using Jay.IO.Logging;
 
 namespace Jay.Web.Server.Dynamic
 {
     public class Dynamic
     {
-        private string GetCommand(string ext) {}
+        //private string GetCommand(string ext) {}
         public static void Load()
         {
             try {
@@ -28,6 +30,7 @@ namespace Jay.Web.Server.Dynamic
                     return;
                 }
             }
+            catch(Exception) {}
         }
     }
 }
