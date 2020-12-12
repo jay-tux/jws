@@ -226,10 +226,10 @@ namespace Jay.Web.Server
             GetPort();
 
             List<string> prefixes = new List<string>();
-            var lst = Program.Settings.GetMappedList($"JWS.Listener.{ListenerState}.Prefixes", "Entry");
+            JcfResult<JcfEnumerable> lst = Program.Settings.GetMappedList($"JWS.Listener.{ListenerState}.Prefixes", "Entry");
             if(lst)
             {
-                ((IEnumerable<JcfResult<string>>)lst).Enumerate((maybe, ind) => {
+                ((JcfEnumerable)lst).Enumerate((maybe, ind) => {
                     if(maybe)
                     {
                         prefixes.Add($"{(string)maybe}:{Port}/");
