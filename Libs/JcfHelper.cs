@@ -10,9 +10,50 @@ namespace Jay.Config
     {
         public T value;
         public ResultOptions state;
+        public ArgumentException exception;
 
         public static implicit operator bool(JcfResult<T> res)
             => res.state == ResultOptions.Success;
+
+        public static explicit operator T(JcfResult<T> res)
+            => res.value;
+
+        public static explicit operator ArgumentException(JcfResult<T> res)
+            => res.exception;
+
+        public static explicit operator JcfResult<T>(T res) => new JcfResult<T> {
+            value = res,
+            state = ResultOptions.Success,
+            exception = null
+        };
+
+        public static explicit operator JcfResult<T>(ArgumentException e) => new JcfResult<T> {
+            value = null,
+            state = ResultOptions.UnknownKey,
+            exception = e
+        };
+
+        public JcfResult<T2> CrossCast<T2>() where T2 : class
+        {
+            if(this)
+                throw new ArgumentException("Result option Success can't be instantiated from throughcast.");
+            return new JcfResult<T2> {
+                value = null,
+                exception = this.exception,
+                state = this.state
+            };
+        }
+
+        public static explicit operator JcfResult<T>(ResultOptions opt)
+        {
+            if(opt != ResultOptions.TypeWrong)
+                throw new ArgumentException("Only result option TypeWrong can be instantiated from cast.");
+            return new JcfResult<T> {
+                value = null,
+                exception = null,
+                state = opt
+            };
+        }
     }
 
     public static class JcfExt
@@ -21,27 +62,12 @@ namespace Jay.Config
         {
             try
             {
-                object s = source[key];
-                if(s is string str)
-                {
-                    return new JcfResult<string> {
-                        value = str,
-                        state = ResultOptions.Success
-                    };
-                }
-                else {
-                    return new JcfResult<string> {
-                        value = null,
-                        state = ResultOptions.TypeWrong
-                    };
-                }
+                return (source[key] is string str) ? (JcfResult<string>)str :
+                    (JcfResult<string>)ResultOptions.TypeWrong;
             }
-            catch(ArgumentException)
+            catch(ArgumentException ae)
             {
-                return new JcfResult<string> {
-                    value = null,
-                    state = ResultOptions.UnknownKey
-                };
+                return (JcfResult<string>)ae;
             }
         }
 
@@ -49,27 +75,12 @@ namespace Jay.Config
         {
             try
             {
-                object j = source[key];
-                if(j is Jcf jcf)
-                {
-                    return new JcfResult<Jcf> {
-                        value = jcf,
-                        state = ResultOptions.Success
-                    };
-                }
-                else {
-                    return new JcfResult<Jcf> {
-                        value = null,
-                        state = ResultOptions.TypeWrong
-                    };
-                }
+                return (source[key] is Jcf jcf) ? (JcfResult<Jcf>)jcf :
+                    (JcfResult<Jcf>)ResultOptions.TypeWrong;
             }
-            catch(ArgumentException)
+            catch(ArgumentException ae)
             {
-                return new JcfResult<Jcf> {
-                    value = null,
-                    state = ResultOptions.UnknownKey
-                };
+                return (JcfResult<Jcf>)ae;
             }
         }
 
@@ -77,27 +88,12 @@ namespace Jay.Config
         {
             try
             {
-                object l = source[key];
-                if(l is List<Jcf> lst)
-                {
-                    return new JcfResult<List<Jcf>> {
-                        value = lst,
-                        state = ResultOptions.Success
-                    };
-                }
-                else {
-                    return new JcfResult<List<Jcf>> {
-                        value = null,
-                        state = ResultOptions.TypeWrong
-                    };
-                }
+                return (source[key] is List<Jcf> jcf) ? (JcfResult<List<Jcf>>)jcf :
+                    (JcfResult<List<Jcf>>)ResultOptions.TypeWrong;
             }
-            catch(ArgumentException)
+            catch(ArgumentException ae)
             {
-                return new JcfResult<List<Jcf>> {
-                    value = null,
-                    state = ResultOptions.UnknownKey
-                };
+                return (JcfResult<List<Jcf>>)ae;
             }
         }
 
@@ -105,15 +101,8 @@ namespace Jay.Config
             string key, string innerkey)
         {
             JcfResult<List<Jcf>> lst = source.GetList(key);
-            return (!lst)
-                ? (new JcfResult<IEnumerable<JcfResult<string>>> {
-                    value = null,
-                    state = lst.state
-                })
-                : (new JcfResult<IEnumerable<JcfResult<string>>> {
-                    value = lst.value.Select(jcf => jcf.GetString(innerkey)),
-                    state = ResultOptions.Success
-                });
+            return (!lst) ? lst.CrossCast<IEnumerable<JcfResult<string>>>() :
+                (JcfResult<IEnumerable<JcfResult<string>>>)lst.value.Select(jcf => jcf.GetString(innerkey));
         }
     }
 }

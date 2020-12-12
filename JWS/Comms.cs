@@ -6,6 +6,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using Jay.IO.Logging;
+using Jay.Config;
 
 namespace Jay.Web.Server
 {
@@ -123,51 +124,36 @@ namespace Jay.Web.Server
 
         private void AttemptRoute()
         {
-            try
+            string state = Listener.ListenerState;
+            JcfResult<string> route = Program.Settings.GetString("JWS.Routing." + _target);
+            if(route)
             {
-                object rt = Program.Settings["JWS.Routing." + _target];
-                string state = Listener.ListenerState;
-                if(rt is string route)
+                Program.Logger.LogFormatted("_resolver", $"Route JWS.Routing.{_target} resolved to {(string)route}", LogSeverity.Debug);
+                _target = (string)route;
+                JcfResult<string> choice = Program.Settings.GetString($"JWS.Listener.{state}.Routing");
+                if(choice)
                 {
-                    Program.Logger.LogFormatted("_resolver", $"Route JWS.Routing.{_target} resolved to {route}", LogSeverity.Debug);
-                    //StaticLogger.LogDebug("_resolver", $"Route JWS.Routing.{_target} resolved to {route}");
-                    _target = route;
-                    try
+                    if((string)choice == "302")
                     {
-                        object c = Program.Settings[$"JWS.Listener.{state}.Routing"];
-                        if(c is string choice)
-                        {
-                            if(choice == "302")
-                            {
-                                StatusCode = 302;
-                                Headers.Add(HttpResponseHeader.Location, _target);
-                                Buffer = new byte[0];
-                                _finished = true;
-                            }
-                            else if(choice != "stay") Program.Logger.LogFormatted("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " +
-                                "Valid options are 302 and stay. Using fallback stay.", LogSeverity.Warning);
-                            //StaticLogger.LogWarning("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " + "Valid options are 302 and stay. Using fallback stay.");
-                        }
-                        else
-                        {
-                            Program.Logger.LogFormatted("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.", LogSeverity.Warning);
-                            //StaticLogger.LogWarning("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.");
-                        }
+                        StatusCode = 302;
+                        Headers.Add(HttpResponseHeader.Location, _target);
+                        Buffer = new byte[0];
+                        _finished = true;
                     }
-                    catch(ArgumentException)
+                    else if((string)choice != "stay")
                     {
-                        Program.Logger.LogFormatted("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.",
-                            LogSeverity.Warning);
-                        //StaticLogger.LogWarning("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.");
+                        Program.Logger.LogFormatted("_resolver", $"Invalid value for JWS.Listener.{state}.Routing: {choice}. " +
+                            "Valid options are 302 and stay. Using fallback stay.", LogSeverity.Warning);
                     }
                 }
+                else if(choice.state == ResultOptions.TypeWrong)
+                    Program.Logger.LogFormatted("_resolver", $"JWS.Listener.{state}.Routing should be a string (either 302 or stay). Using fallback stay.", LogSeverity.Warning);
                 else
-                {
-                    Program.Logger.LogFormatted("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...", LogSeverity.Warning);
-                    //StaticLogger.LogWarning("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...");
-                }
+                    Program.Logger.LogFormatted("_resolver", $"Routing policy for {state} (JWS.Listener.{state}.Routing) not set (expecting either 302 or stay). Using fallback stay.",
+                    LogSeverity.Warning);
             }
-            catch(ArgumentException) {}
+            else if(route.state == ResultOptions.TypeWrong)
+                Program.Logger.LogFormatted("_resolver", $"Route JWS.Routing.{_target} is not a string. Attempting to resolve URL as file...", LogSeverity.Warning);
         }
 
         private void AttemptRootRoute()
@@ -175,26 +161,12 @@ namespace Jay.Web.Server
             if(_target == "/")
             {
                 Program.Logger.LogFormatted("_resolver", "Client requested server root (/). Attempting to resolve...", LogSeverity.Debug);
-                //StaticLogger.LogDebug("_resolver", "Client requested server root (/). Attempting to resolve...");
-                try
+                JcfResult<string> root = Program.Settings.GetString("JWS.Server.Root");
+                if(root) { _target = (string)root; }
+                else
                 {
-                    object rt = Program.Settings["JWS.Server.Root"];
-                    if(rt is string root)
-                    {
-                        _target = root;
-                    }
-                    else
-                    {
-                        Program.Logger.LogFormatted("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.", LogSeverity.Warning);
-                        //StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) should be a string. Using fallback /index.html.");
-                        _target = "/index.html";
-                    }
-                }
-                catch(ArgumentException)
-                {
-                    Program.Logger.LogFormatted("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.", LogSeverity.Warning);
-                    //StaticLogger.LogWarning("_resolver", "Server root (JWS.Server.Root) is not configured. Using fallback /index.html.");
                     _target = "/index.html";
+                    Program.Logger.LogFormatted("_resolver", "Server root (JWS.Server.Root) is not configured (correctly). Using fallback /index.html.", LogSeverity.Warning);
                 }
             }
         }
@@ -231,26 +203,12 @@ namespace Jay.Web.Server
             if(!_error)
             {
                 string ext = _target.Split('.').Last();
-                try
-                {
-                    object m = Program.Settings["JWS.Server.FileAssoc." + ext];
-                    if(m is string mi)
-                    {
-                        MIMEType = mi;
-                    }
-                    else
-                    {
-                        Program.Logger.LogFormatted("_resolver", $"File associations should be strings; not the case for JWS.Server.FileAssoc.{ext}. Using fallback text/html.",
-                            LogSeverity.Warning);
-                        //StaticLogger.LogWarning("_resolver", $"File associations should be strings; not the case for JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
-                    }
-                }
-                catch(ArgumentException)
-                {
-                    Program.Logger.LogFormatted("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.",
+                JcfResult<string> mi = Program.Settings.GetString("JWS.Server.FileAssoc." + ext);
+                if(mi) { MIMEType = (string)mi; }
+                else
+                    Program.Logger.LogFormatted("_resolver",
+                        $"File association *.{ext} not present or incorrectly configured. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.",
                         LogSeverity.Warning);
-                    //StaticLogger.LogWarning("_resolver", $"File association *.{ext} not present. Configure as JWS.Server.FileAssoc.{ext}. Using fallback text/html.");
-                }
             }
         }
 
@@ -293,24 +251,11 @@ namespace Jay.Web.Server
             if(Headers != null) resp.Headers = Headers;
             resp.StatusCode = StatusCode;
 
-            try
+            JcfResult<string> state = Program.Settings.GetString("JWS.Statusses." + StatusCode.ToString());
+            if(state) { resp.StatusDescription = (string)state; }
+            else
             {
-                object s = Program.Settings["JWS.Statusses." + StatusCode.ToString()];
-                if(s is string stat)
-                {
-                    resp.StatusDescription = stat;
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("Comms", $"Status description for {StatusCode} should be string.", LogSeverity.Warning);
-                    //StaticLogger.LogWarning(this, $"Status description for {StatusCode} should be string.");
-                    resp.StatusDescription = "-- unknown status --";
-                }
-            }
-            catch(ArgumentException)
-            {
-                Program.Logger.LogFormatted("Coms", $"Status description for {StatusCode} (JWS.Statusses.{StatusCode}) is undefined.", LogSeverity.Warning);
-                //StaticLogger.LogWarning(this, $"Status description for {StatusCode} (JWS.Statusses.{StatusCode}) is undefined.");
+                Program.Logger.LogFormatted("Coms", $"Status description for {StatusCode} (JWS.Statusses.{StatusCode}) is undefined or incorrectly defined.", LogSeverity.Warning);
                 resp.StatusDescription = "-- unknown status --";
             }
 
