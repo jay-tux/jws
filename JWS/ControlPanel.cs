@@ -197,11 +197,11 @@ namespace Jay.Web.Server
                 try {
                     File.WriteAllLines(Program.Data() + "/jws/hs", Hashes.JoinPairs('>'));
                 }
-                catch(UnauthorizedAccessException ue)
+                catch(UnauthorizedAccessException)
                 {
                     Console.Error.WriteLine("Can't open hashes file " + Program.Data() + "/jws/hs.");
                 }
-                catch(IOException ioe)
+                catch(IOException)
                 {
                     Console.Error.WriteLine("Can't open hashes file " + Program.Data() + "/jws/hs.");
                 }
