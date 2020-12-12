@@ -64,126 +64,83 @@ namespace Jay.Web.Server
         {
             Tokens = new List<string>();
             Hashes = LoadHashes();
-            try
+
+            JcfResult<string> state = Program.Settings.GetString("JWS.ControlPanel.State");
+            if(state)
             {
-                object s = Program.Settings["JWS.ControlPanel.State"];
-                if(s is string state)
+                if((string)state == "off")
                 {
-                    if(state == "off")
-                    {
-                        Program.Logger.LogFormatted("_hook_cpanel", "Disabling ControlPanel...", LogSeverity.Message);
-                        return;
-                    }
-                    else if(state != "on")
-                    {
-                        Program.Logger.LogFormatted("_hook_cpanel", "Setting JWS.ControlPanel.State should be either 'on' or 'off'. Assuming off.", LogSeverity.Warning);
-                        return;
-                    }
+                    Program.Logger.LogFormatted("_hook_cpanel", "Disabling ControlPanel...", LogSeverity.Message);
+                    return;
                 }
-                else
+                else if((string)state != "on")
                 {
-                    Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.State should be a string. Assuming 'off'.", LogSeverity.Warning);
+                    Program.Logger.LogFormatted("_hook_cpanel", "Setting JWS.ControlPanel.State should be either 'on' or 'off'. Assuming off.", LogSeverity.Warning);
                     return;
                 }
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.State is not defined. Assuming 'off'.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.State is not (correctly) defined. Assuming 'off'.", LogSeverity.Warning);
                 return;
             }
 
             CPath = "/cpanel/";
-            try
+            JcfResult<string> path = Program.Settings.GetString("JWS.ControlPanel.URL");
+            if(path)
             {
-                object p = Program.Settings["JWS.ControlPanel.URL"];
-                if(p is string path)
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", $"Set Control Panel URL to {path}.", LogSeverity.Debug);
-                    CPath = path;
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", "Control Panel URL (JWS.ControlPanel.URL) should be a string. Using fallback /cpanel/.", LogSeverity.Warning);
-                }
+                Program.Logger.LogFormatted("_hook_cpanel", $"Set Control Panel URL to {path}.", LogSeverity.Debug);
+                CPath = (string)path;
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_cpanel", "Control Panel URL (JWS.ControlPanel.URL) not set. Using fallback /cpanel/.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_cpanel", "Control Panel URL (JWS.ControlPanel.URL) not (correctly) set. Using fallback /cpanel/.", LogSeverity.Warning);
             }
 
-            try
+            JcfResult<string> title = Program.Settings.GetString("JWS.ControlPanel.LoginTitle");
+            if(title)
             {
-                object t = Program.Settings["JWS.ControlPanel.LoginTitle"];
-                if(t is string title)
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", $"Set Control Panel Login Title to {title}", LogSeverity.Debug);
-                    LoginTitle = title;
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.LoginTitle should be a string. Using fallback Control Panel Login.", LogSeverity.Warning);
-                }
+                Program.Logger.LogFormatted("_hook_cpanel", $"Set Control Panel Login Title to {title}", LogSeverity.Debug);
+                LoginTitle = (string)title;
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.LoginTitle is not defined. Using fallback Control Panel Login.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.LoginTitle is not (correctly) defined. Using fallback Control Panel Login.", LogSeverity.Warning);
             }
 
-            try
+            title = Program.Settings.GetString("JWS.ControlPanel.CPanelTitle");
+            if(title)
             {
-                object t = Program.Settings["JWS.ControlPanel.CPanelTitle"];
-                if(t is string title)
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", $"Set Control Panel Title to {title}", LogSeverity.Debug);
-                    CPanelTitle = title;
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.CPanelTitle should be a string. Using fallback Control Panel.", LogSeverity.Warning);
-                }
+                Program.Logger.LogFormatted("_hook_cpanel", $"Set Control Panel Title to {title}", LogSeverity.Debug);
+                CPanelTitle = (string)title;
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.CPanelTitle is not defined. Using fallback Control Panel.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.CPanelTitle is not (correctly) defined. Using fallback Control Panel.", LogSeverity.Warning);
             }
 
-            try
+            JcfResult<string> footer = Program.Settings.GetString("JWS.ControlPanel.Footer");
+            if(footer)
             {
-                object f = Program.Settings["JWS.ControlPanel.Footer"];
-                if(f is string footer)
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", $"Set Footer to {footer}", LogSeverity.Debug);
-                    Footer = footer;
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.Footer should be a string. Using fallback Control Panel - Only for Authorized Users.",
-                        LogSeverity.Warning);
-                }
+                Program.Logger.LogFormatted("_hook_cpanel", $"Set Footer to {footer}", LogSeverity.Debug);
+                Footer = (string)footer;
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.Footer is not defined. Using fallback Control Panel - Only for Authorized Users.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.Footer is not (correctly) defined. Using fallback Control Panel - Only for Authorized Users.", LogSeverity.Warning);
             }
 
-            try
+            JcfResult<Jcf> css = Program.Settings.GetBlock("JWS.ControlPanel.CSS");
+            if(css)
             {
-                object c = Program.Settings["JWS.ControlPanel.CSS"];
-                if(c is Jcf css)
-                {
-                    css.EnumerateKeys((key, value) => {
-                        CSS[key] = value;
-                        Program.Logger.LogFormatted("_css_cpanel", $"Found CSS for {key}: {value}.", LogSeverity.Debug);
-                    });
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_cpanel", "JWS.ControlPanel.CSS should be a block. Assuming an empty block.", LogSeverity.Warning);
-                }
+                ((Jcf)css).EnumerateKeys((key, value) => {
+                    CSS[key] = value;
+                    Program.Logger.LogFormatted("_css_cpanel", $"Found CSS for {key}: {value}.", LogSeverity.Debug);
+                });
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_cpanel", "No CSS defined for Control Panel. If you want to define any, use the JWS.ControlPanel.CSS block.", LogSeverity.Message);
+                Program.Logger.LogFormatted("_hook_cpanel", "No CSS defined for Control Panel. If you want to define any, use the JWS.ControlPanel.CSS block (maybe the block is not a block?).", LogSeverity.Message);
             }
 
             Program.Logger.LogFormatted("_hook_cpanel", "Hooking into Comms (1 hook).", LogSeverity.Debug);
