@@ -563,6 +563,7 @@ namespace Jay.Web.Server
         {
             Templating.Load();
             ControlPanel.Load();
+            Dynamic.Load();
         }
 
         public void Exit(int code)

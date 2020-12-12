@@ -4,6 +4,7 @@ JWS: {
         HTML: @Home/.config/jws/html
         Error: @Home/.config/jws/error
         Template: @Home/.config/jws/html/template
+        Exclude: []
     }
     : contains some server settings (should contain Root (reroute for / url), Name and FileAssoc (MIME associations; a block))
     Server: {
@@ -13,6 +14,7 @@ JWS: {
             : some frequently used ones, subset of https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
             : to mark a file type as template (not to be served directly), set it to <extension>: $JWS.Templates.Assoc$
             : to mark a file type as data to fill a template with, set it to <extension>: $JWS.Templates.Data$
+            : dynamic executable files should be <extension>: dynamic/<command, or exec>
             aac: audio/aac
             bin: application/octet-stream
             bmp: image/bmp
@@ -233,6 +235,31 @@ JWS: {
         CSS: {
             Login: css/login.css
             Home: css/home.css
+        }
+    }
+    : settings concerning the dynamic loader
+    Dynamic: {
+        Enabled: on
+        Commands: {
+            py: /usr/bin/python3
+            rb: /usr/bin/ruby
+            sh: /usr/bin/bash
+            dll: /usr/bin/mono
+            jar: /usr/bin/java -jar
+        }
+        NoCommand: [
+            {
+                Extension: out
+            },
+            {
+                Extension: exe
+            }
+        ]
+        Protocol: {
+            Version: 0.1
+            Overrides: []
+            AddPort: on
+            PortArg: -p
         }
     }
 }
