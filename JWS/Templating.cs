@@ -5,6 +5,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.IO;
 using Jay.Ext;
+using Jay.Config;
 
 namespace Jay.Web.Server
 {
@@ -18,69 +19,59 @@ namespace Jay.Web.Server
 
         public static void Load()
         {
-            try
+            JcfResult<string> state = Program.Settings.GetString("JWS.Templates.State");
+            if(state)
             {
-                object s = Program.Settings["JWS.Templates.State"];
-                if(s is string state)
+                switch((string)state)
                 {
-                    switch(s)
-                    {
-                        case "off":
-                            Program.Logger.LogFormatted("_hook_template", "Deactivating templating system.", LogSeverity.Message);
-                            return;
-                        case "on":
-                            Program.Logger.LogFormatted("_hook_template", "Activating templating system.", LogSeverity.Message);
-                            break;
-                        default:
-                            Program.Logger.LogFormatted("_hook_template", "Templating state (JWS.Templates.State) incorrectly defined. Expecting on or off. Using fallback off.",
-                                LogSeverity.Warning);
-                            return;
-                    }
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_template", "Templating state (JWS.Templates.State) should be a string. Using fallback off.", LogSeverity.Warning);
-                    return;
+                    case "off":
+                        Program.Logger.LogFormatted("_hook_template", "Deactivating templating system.", LogSeverity.Message);
+                        return;
+                    case "on":
+                        Program.Logger.LogFormatted("_hook_template", "Activating templating system.", LogSeverity.Message);
+                        break;
+                    default:
+                        Program.Logger.LogFormatted("_hook_template", "Templating state (JWS.Templates.State) incorrectly defined. Expecting on or off. Using fallback off.",
+                            LogSeverity.Warning);
+                        return;
                 }
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_template", "Templating state is not defined (expecting in JWS.Templates.State). Using fallback off.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_template", "Templating state is not (correctly) defined (expecting in JWS.Templates.State). Using fallback off.", LogSeverity.Warning);
                 return;
             }
 
-            try
+            JcfResult<string> _path = Program.Settings.GetString("JWS.Paths.Template");
+            string path;
+            if(_path)
             {
-                object p = Program.Settings["JWS.Paths.Template"];
-                if(p is string path)
+                try
                 {
-                    try
+                    path = ((string)_path).Replace("@Home", Program.GetHome()).Replace("@Data", Program.Data());
+                    if(Directory.Exists(path))
                     {
-                        path = path.Replace("@Home", Program.GetHome()).Replace("@Data", Program.Data());
-                        if(Directory.Exists(path))
-                        {
-                            if(path.EndsWith("/")) path = path.Substring(0, path.Length - 1);
-                            TemplateDir = path;
-                            Program.Logger.LogFormatted("_hook_template", $"Set Template Directory to {path}.", LogSeverity.Message);
-                        }
-                        else
-                        {
-                            Program.Logger.LogFormatted("_hook_template", $"Template dir in config file ({path}) doesn't exist. No fallback available.", LogSeverity.Error);
-                            Program.Instance.Exit(3);
-                        }
+                        if(path.EndsWith("/")) path = path.Substring(0, path.Length - 1);
+                        TemplateDir = path;
+                        Program.Logger.LogFormatted("_hook_template", $"Set Template Directory to {path}.", LogSeverity.Message);
                     }
-                    catch(IOException)
+                    else
                     {
-                        Program.Logger.LogFormatted("Listener", $"Template dir not defined in config file. No fallback available.", LogSeverity.Error);
+                        Program.Logger.LogFormatted("_hook_template", $"Template dir in config file ({path}) doesn't exist. No fallback available.", LogSeverity.Error);
                         Program.Instance.Exit(3);
                     }
                 }
+                catch(IOException)
+                {
+                    Program.Logger.LogFormatted("Listener", $"Template dir not defined in config file. No fallback available.", LogSeverity.Error);
+                    Program.Instance.Exit(3);
+                }
             }
-            catch(ArgumentException)
+            else
             {
                 string pth = Program.GetHome() + "/.config/jws/template";
                 Program.Logger.LogFormatted("_hook_template", $"Template Dir not configured in config file (JWS.Paths.Template). Trying fallback {pth}.",
-                    LogSeverity.Warning);
+                LogSeverity.Warning);
                 try
                 {
                     if(Directory.Exists(pth))
@@ -101,86 +92,52 @@ namespace Jay.Web.Server
                 }
             }
 
-            try
+            JcfResult<string> temp = Program.Settings.GetString("JWS.Templates.Assoc");
+            if(temp)
             {
-                object t = Program.Settings["JWS.Templates.Assoc"];
-                if(t is string temp)
-                {
-                    MIMETemplate = temp;
-                    Program.Logger.LogFormatted("_hook_template", $"Template MIME type successfully set to {temp}.", LogSeverity.Message);
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_template", "Template MIME type (JWS.Templates.Assoc) should be a string. Using fallback text/jwstemplate.",
-                        LogSeverity.Warning);
-                    MIMETemplate = "text/jwstemplate";
-                }
+                MIMETemplate = (string)temp;
+                Program.Logger.LogFormatted("_hook_template", $"Template MIME type successfully set to {MIMETemplate}.", LogSeverity.Message);
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_template", "Template MIME type (JWS.Templates.Assoc) not defined. Using fallback text/jwstemplate.", LogSeverity.Warning);
                 MIMETemplate = "text/jwstemplate";
+                Program.Logger.LogFormatted("_hook_template", "Template MIME type (JWS.Templates.Assoc) not (correctly) defined. Using fallback text/jwstemplate.", LogSeverity.Warning);
             }
 
-            try
+            JcfResult<string> data = Program.Settings.GetString("JWS.Templates.Data");
+            if(temp)
             {
-                object d = Program.Settings["JWS.Templates.Data"];
-                if(d is string data)
-                {
-                    MIMEData = data;
-                    Program.Logger.LogFormatted("_hook_template", $"Template data MIME type successfully set to {data}.", LogSeverity.Message);
-                }
-                else
-                {
-                    Program.Logger.LogFormatted("_hook_template", "Template data MIME type (JWS.Templates.Data) should be a string. Using fallback text/jwsdata.",
-                        LogSeverity.Warning);
-                    MIMEData = "text/jwsdata";
-                }
+                MIMEData = (string)data;
+                Program.Logger.LogFormatted("_hook_template", $"Template data MIME type successfully set to {MIMEData}.", LogSeverity.Message);
             }
-            catch(ArgumentException)
+            else
             {
-                Program.Logger.LogFormatted("_hook_template", "Template data MIME type (JWS.Templates.Data) not defined. Using fallback text/jwsdata.", LogSeverity.Warning);
-                MIMEData = "text/jwsdata";
+                MIMETemplate = "text/jwsdata";
+                Program.Logger.LogFormatted("_hook_template", "Template data MIME type (JWS.Templates.Data) not (correctly) defined. Using fallback text/jwsdata.", LogSeverity.Warning);
             }
 
-            try
+            JcfResult<string> prefix = Program.Settings.GetString("JWS.Templates.Prefix");
+            if(prefix)
             {
-                object p = Program.Settings["JWS.Templates.Prefix"];
-                if(p is string pref)
-                {
-                    TemplatePrefix = pref;
-                    Program.Logger.LogFormatted("_hook_template", $"Set prefix to {pref}.", LogSeverity.Debug);
-                }
-                else
-                {
-                    TemplatePrefix = "$";
-                    Program.Logger.LogFormatted("_hook_template", "Prefix should be a string (JWS.Templates.Prefix). Using fallback $.", LogSeverity.Warning);
-                }
+                TemplatePrefix = (string)prefix;
+                Program.Logger.LogFormatted("_hook_template", $"Set prefix to {(string)prefix}.", LogSeverity.Debug);
             }
-            catch(ArgumentException)
+            else
             {
                 TemplatePrefix = "$";
-                Program.Logger.LogFormatted("_hook_template", "Prefix not defined (JWS.Templates.Prefix). Using fallback $.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_template", "Prefix not (correctly) defined (JWS.Templates.Prefix). Using fallback $.", LogSeverity.Warning);
             }
 
-            try
+            JcfResult<string> index = Program.Settings.GetString("JWS.Templates.Indexing");
+            if(index)
             {
-                object i = Program.Settings["JWS.Templates.Indexing"];
-                if(i is string index)
-                {
-                    Indexing = index;
-                    Program.Logger.LogFormatted("_hook_template", $"Set indexing operator to {index}.", LogSeverity.Debug);
-                }
-                else
-                {
-                    Indexing = "::";
-                    Program.Logger.LogFormatted("_hook_template", "Indexing operator should be a string (JWS.Templates.Indexing). Using fallback ::.", LogSeverity.Warning);
-                }
+                Indexing = (string)index;
+                Program.Logger.LogFormatted("_hook_template", $"Set indexing operator to {index}.", LogSeverity.Debug);
             }
-            catch(ArgumentException)
+            else
             {
                 Indexing = "::";
-                Program.Logger.LogFormatted("_hook_template", "Indexing operator not defined (JWS.Templates.Indexing). Using fallback ::.", LogSeverity.Warning);
+                Program.Logger.LogFormatted("_hook_template", "Indexing operator not (correctly) defined (JWS.Templates.Indexing). Using fallback ::.", LogSeverity.Warning);
             }
 
             Program.Logger.LogFormatted("_hook_template", "Attempting to hook into Comms (2 hooks).", LogSeverity.Debug);
