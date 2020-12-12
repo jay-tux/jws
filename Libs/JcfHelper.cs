@@ -97,7 +97,7 @@ namespace Jay.Config
             }
         }
 
-        public static JcfResult<IEnumerable<JcfResult<string>>> GetMappedList<TOut>(this Jcf source,
+        public static JcfResult<IEnumerable<JcfResult<string>>> GetMappedList(this Jcf source,
             string key, string innerkey)
         {
             JcfResult<List<Jcf>> lst = source.GetList(key);

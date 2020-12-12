@@ -15,7 +15,9 @@ Inheritance: [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object?
  - ``string IEnumerable<byte>.ToChars()``: converts a byte sequence to the corresponding ASCII string.  
  - ``byte[] string.ToBytes()``: converts a string to its corresponding ASCII byte sequence.  
  - ``byte[] string.HexBytes()``: converts a string of hexadecimal bytes (XX form, no characters between) back to a byte sequence.  
- - ``void List<T>.Enumerate(Action<T, int> consumer)``: enumerates an array Python-style (with element and index).  
+ - ``void List<T>.Enumerate(Action<T, int> consumer)``: enumerates a list Python-style (with element and index).  
+ - ``void T[].Enumerate(Action<T, int> consumer)``: enumerates an array Python-style (with element and index).  
+ - ``void IEnumerable<T>.Enumerate(Action<T, int> consumer)``: enumerates an IEnumerable Python-style (with element and index).  
  - ``T List<T>.Pop()``: pops the first element of the List.  
  - ``List<TResult> List<TSource>.DcEnumerate(List<TManipulator> second, Func<TSource, TManipulator, TResult> enumerator)``: combines two lists using ``enumerator`` (all elements of the first list are guaranteed to be enumerated. If ``second`` is shorter, indexing is restarted on ``second``).  
  - ``void IEnumerable<T>.ForEach(Action<T> consumer)``: applies ``consumer`` to each element in the given ``IEnumerable<T>``.  

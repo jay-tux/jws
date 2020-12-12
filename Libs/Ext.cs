@@ -93,10 +93,25 @@ namespace Jay.Ext
         /// </summary>
         /// <param name="toEnum">The array to enumerate</param>
         /// <param name="consumer">The method to execute for each (item, index) pair</param>
-        /// <typeparam name="T">The type contained in the list</typeparam>
+        /// <typeparam name="T">The type contained in the array</typeparam>
         public static void Enumerate<T>(this T[] toEnum, Action<T, int> consumer)
         {
             for(int i = 0; i < toEnum.Length; i++) consumer(toEnum[i], i);
+        }
+
+        /// <summary>
+        /// Enumerates an IEnumerable Python-style (with element and index).
+        /// </summary>
+        /// <param name="toEnum">The IEnumerable to enumerate</param>
+        /// <param name="consumer">The method to execute for each (item, index) pair</param>
+        /// <typeparam name="T">The type contained in the IEnumerable</typeparam>
+        public static void Enumerate<T>(this IEnumerable<T> toEnum, Action<T, int> consumer)
+        {
+            int index = 0;
+            toEnum.ForEach(elem => {
+                consumer(elem, index);
+                index++;
+            });
         }
 
         /// <summary>
