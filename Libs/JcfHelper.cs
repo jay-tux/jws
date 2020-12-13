@@ -102,8 +102,6 @@ namespace Jay.Config
             string key, string innerkey)
         {
             JcfResult<List<Jcf>> lst = source.GetList(key);
-            /*return (!lst) ? lst.CrossCast<IEnumerable<JcfResult<string>>>() :
-                (JcfResult<IEnumerable<JcfResult<string>>>)lst.value.Select(jcf => jcf.GetString(innerkey));*/
             if(lst)
             {
                 return (JcfResult<JcfEnumerable>)(new JcfEnumerable(lst.value, innerkey));
@@ -131,7 +129,7 @@ namespace Jay.Config
         private int index;
         private string inner;
 
-        public JcfEnumerator(List<Jcf> source, string inner) { this.source = source; index = 0; this.inner = inner; }
+        public JcfEnumerator(List<Jcf> source, string inner) { this.source = source; index = -1; this.inner = inner; }
         public JcfResult<string> Current {
             get => source[index].GetString(inner);
         }
