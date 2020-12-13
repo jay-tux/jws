@@ -376,9 +376,9 @@ namespace Jay.Web.Server
                 $"<textarea name=cnt rows=40 cols=80 form=main>{fcnt}</textarea><br />\n" +
                 ((success) ? "" : $"<p class=error>Couldn't load the requested file.</p><br />\n") +
                 $"<input type=hidden name=token value=\"{token}\" /><input type=hidden name=action value=update /><br />\n" +
-                $"<input type=submit value=\"Update File\" /></form></div>\n" +
+                $"<input type=submit value=\"Update File\" /></form>\n" +
                 $"<form action=\"{CPath}\" id=lout method=POST><input type=hidden name=action value=logout /><input type=hidden name=token value=\"{token}\" />" +
-                $"<input type=submit value=Logout /></form>" +
+                $"<input type=submit value=Logout /></form></div>" +
                 $"<div class=footer>{Footer}</div>\n</body>\n</html>";
             target.Content = form;
             target.StatusCode = 200;
