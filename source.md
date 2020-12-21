@@ -15,6 +15,11 @@
      - Enum [JcfType](Libs/Conf.md): Is either Value (a single value), Jcf (a sub-block) or List (a JCF list)  
    - Class [JcfException](Libs/Conf.md): Exception class for representing parsing errors.  
    - Class [JcfParser](Libs/Conf.md): A static class for parsing JCF files.  
+   - Enum [ResultOptions](Libs/JcfHelper.md): Enum type containing the possible results of a query.  
+   - Class [JcfResult<T>](Libs/JcfHelper.md): Class containing quick-access data for query results.  
+   - Class [JcfExt](Libs/JcfExt.md): A static class containing extension query methods for the [Jcf](./Conf.md) class.  
+   - Class [JcfEnumerable](Libs/JcfExt.md): Enumerable class for enumerating single-key JCF-lists.  
+   - Class [JcfEnumerator](Libs/JcfExt.md): Enumerator class for the JcfEnumerable.  
  - Namespace Jay.Ext  
    - Class [Ext](Libs/Ext.md): A static class containing multiple extension methods.  
  - Namespace Jay.IO.Logging  
